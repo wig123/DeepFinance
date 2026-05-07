@@ -1,0 +1,54 @@
+[project]
+name = "deepfinance"
+version = "0.1.0"
+description = "基于 LangGraph 多智能体的金融文档分析与深度研究报告生成系统"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Agent Framework
+    "langgraph>=0.2.0",
+    "langchain>=0.3.0",
+    "langchain-openai>=0.2.0",
+    "langchain-anthropic>=0.2.0",
+    "langchain-google-genai>=2.0.0",
+    # Document Parsing
+    "docling>=2.0.0",
+    # Financial Data
+    "akshare>=1.14.0",
+    "efinance>=0.5.0",
+    "yfinance>=0.2.0",
+    # Web Search
+    "httpx>=0.27.0",
+    "tavily-python>=0.5.0",
+    # Report Export
+    "weasyprint>=62.0",
+    "python-docx>=1.1.0",
+    "jinja2>=3.1.0",
+    "markdown>=3.7",
+    # Utilities
+    "pydantic>=2.9.0",
+    "pyyaml>=6.0.0",
+    "diskcache>=5.6.0",
+    "python-dotenv>=1.0.0",
+    "rapidfuzz>=3.0.0", # 高性能模糊字符串匹配
+    # Web API
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "python-multipart>=0.0.20",
+    "websockets>=14.0",
+    "sse-starlette>=3.1.2",
+    "socksio>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]

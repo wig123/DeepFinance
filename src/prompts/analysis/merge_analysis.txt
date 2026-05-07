@@ -1,0 +1,131 @@
+你是一位专业的金融文档分析师。基于各部分的分析结果，请生成文档元信息、关键要点和补充研究需求。
+
+## 文档信息
+
+- 页数: {pages}
+- 图表数量: {figures_count}
+- 分析时间: {analysis_time}
+
+---
+
+## 各部分内容摘要
+
+{merged_content_summaries}
+
+---
+
+## 任务
+
+请基于以上各部分的分析结果，生成以下三个部分，以**严格的JSON格式**返回：
+
+### 1. 文档元信息 (document_metadata)
+
+从内容摘要中提取：
+- document_type: 文档类型（earnings_report/annual_report/research_report等）
+- company: 公司名称
+- period: 报告期（如 "Q3 2025"）
+- publish_date: 发布日期
+- key_topics: 主要议题列表（5-8个）
+
+### 2. 关键要点汇总 (key_takeaways)
+
+综合全文，提炼5-10个最重要的要点：
+- id: 要点ID（如 takeaway-001）
+- category: 分类（positive/negative/neutral）
+- statement: 要点陈述（1句话）
+- evidence: 数据支撑
+- significance: 重要性说明
+- sources: 引用列表
+
+### 3. 补充研究需求 (supplementary_research_needs)
+
+识别需要外部补充的信息，分4个维度：
+
+**temporal_updates** - 时效性补充：
+- id, topic, reason, search_queries, priority
+
+**comparative_data** - 对比信息：
+- id, comparison_type, metric, reason, search_queries
+
+**deep_dive_analysis** - 深度分析：
+- id, topic, question, reason, search_queries
+
+**market_perspectives** - 市场观点：
+- id, topic, perspective_type, search_queries
+
+---
+
+## 返回格式
+
+```json
+{{
+  "document_metadata": {{
+    "document_type": "earnings_report",
+    "company": "Company Name",
+    "period": "Q3 2025",
+    "publish_date": "2025-10-23",
+    "key_topics": ["财务表现", "业务运营", "战略举措", "未来展望"]
+  }},
+  "key_takeaways": [
+    {{
+      "id": "takeaway-001",
+      "category": "positive",
+      "statement": "要点陈述",
+      "evidence": "数据支撑",
+      "significance": "重要性说明",
+      "sources": [{{"id": "doc-p5", "location": "page-5"}}]
+    }}
+  ],
+  "supplementary_research_needs": {{
+    "temporal_updates": [
+      {{
+        "id": "temporal-001",
+        "topic": "最新业务进展",
+        "reason": "文档发布已有一段时间，需要了解后续进展",
+        "search_queries": ["query 1", "query 2", "query 3"],
+        "priority": "high"
+      }}
+    ],
+    "comparative_data": [
+      {{
+        "id": "compare-001",
+        "comparison_type": "competitors",
+        "metric": "需要对比的指标",
+        "reason": "为什么需要对比",
+        "search_queries": ["query 1", "query 2"]
+      }}
+    ],
+    "deep_dive_analysis": [
+      {{
+        "id": "deepdive-001",
+        "topic": "需要深挖的主题",
+        "question": "具体问题",
+        "reason": "为什么需要深挖",
+        "search_queries": ["query 1", "query 2"]
+      }}
+    ],
+    "market_perspectives": [
+      {{
+        "id": "market-001",
+        "topic": "市场观点主题",
+        "perspective_type": "analyst_ratings",
+        "search_queries": ["query 1", "query 2"]
+      }}
+    ]
+  }}
+}}
+```
+
+---
+
+## 输出要求
+
+1. **综合性**：关键要点需要综合全文，不是简单列举各部分
+2. **差异化**：补充研究需求应该针对文档信息的不足之处
+3. **精准搜索**：search_queries 要具体、可执行（英文为主）
+4. **完整字段**：所有必填字段都要包含，缺失的可返回空数组 `[]`
+5. **只返回JSON**：不要有任何其他文字说明
+
+---
+
+现在开始生成，直接返回JSON结果:

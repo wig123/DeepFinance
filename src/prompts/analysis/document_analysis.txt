@@ -1,0 +1,250 @@
+你是一位专业的金融文档分析师。请对文档进行**完整的结构化总结**，保留所有重要信息，便于后续问答和深度分析。
+
+文档信息:
+- 页数: {pages}
+- 图表数量: {figures_count}
+- 文档类型: 金融报告/财报/研报
+
+{figures_summary}
+{user_focus}
+文档内容:
+{content}
+
+---
+
+请完成以下任务，并以**严格的JSON格式**返回结果：
+
+## 1. 文档元信息 (document_metadata)
+   - document_type: 文档类型（earnings_report/annual_report/research_report等）
+   - company: 公司名称
+   - period: 报告期（如 "Q3 2025"）
+   - publish_date: 发布日期
+   - key_topics: 主要议题列表
+
+## 2. 完整内容总结 (content_summary)
+
+按文档实际结构进行**完整总结**，每个部分包含：
+   - section_id: 章节ID（如 "financial_performance"）
+   - section_title: 章节标题
+   - content: 详细总结（保留所有关键信息、数据、观点）
+   - key_metrics: 关键指标列表，每项包含：
+     * metric: 指标名称
+     * current_value: 当前值
+     * previous_value: 对比值（如去年同期）
+     * change: 变化（如 "+12% YoY"）
+     * context: 上下文说明
+     * source: 引用位置（如 "page-5#table-2"）
+     * original_quote: **英文原文引用**（2-3句话，直接摘录原文档中的关键句子，保持英文不翻译）
+   - insights: 关键洞察（3-5句话）
+   - citations: 引用列表
+
+**常见章节示例**（根据实际文档调整）：
+- financial_performance: 财务表现
+- business_operations: 业务运营（交付量、产能、市场份额等）
+- strategic_initiatives: 战略举措（新产品、新市场、并购等）
+- risks_challenges: 风险与挑战
+- future_outlook: 未来展望
+
+## 3. 关键要点汇总 (key_takeaways)
+
+提炼5-10个最重要的要点，每项包含：
+   - id: 要点ID
+   - category: 分类（positive/negative/neutral）
+   - statement: 要点陈述（1句话）
+   - evidence: 数据支撑
+   - significance: 重要性说明
+   - sources: 引用
+
+## 4. 补充研究需求 (supplementary_research_needs)
+
+识别需要外部补充的信息，分4个维度：
+
+### 4.1 时效性补充 (temporal_updates)
+   - id: 需求ID
+   - topic: 主题
+   - reason: 为什么需要（如"文档发布于3个月前，需要最新进展"）
+   - search_queries: 搜索查询列表（3-5个）
+   - priority: high/medium/low
+
+### 4.2 对比信息 (comparative_data)
+   - id: 需求ID
+   - comparison_type: 对比类型（industry_average/competitors/historical_trend）
+   - metric: 需要对比的指标
+   - reason: 为什么需要对比
+   - search_queries: 搜索查询列表
+
+### 4.3 深度分析 (deep_dive_analysis)
+   - id: 需求ID
+   - topic: 需要深挖的主题
+   - question: 具体问题
+   - reason: 为什么需要（如"文档仅提及结果，未说明原因"）
+   - search_queries: 搜索查询列表
+
+### 4.4 市场观点 (market_perspectives)
+   - id: 需求ID（必填，如 "market-001"）
+   - topic: 主题（必填）
+   - perspective_type: **必填**，观点类型，必须是以下之一：
+     * "analyst_ratings" - 分析师评级
+     * "institutional_views" - 机构观点
+     * "price_reaction" - 股价反应
+   - search_queries: 搜索查询列表
+
+## 5. 图表分析汇总 (charts_analysis)
+   汇总metadata中已有的图表分析，每项包含:
+   - figure_id: 图表ID
+   - type: 类型（"chart"/"illustration"/"icon"）
+   - title: 标题
+   - analysis: 如果有AI分析，包含四层结构的dict
+   - description: 如果是插图，包含描述文字
+
+---
+
+## 输出要求
+
+1. **完整性**：保留文档所有重要信息，不要过度精简
+2. **结构化**：按章节组织，便于检索和问答
+3. **可追溯**：所有数据/观点都标注引用位置
+4. **保留原文**：key_metrics 中的 `original_quote` 字段必须直接摘录英文原文（2-3句话），不要翻译成中文
+5. **补充明确**：清晰说明为什么需要外部补充，生成精准的搜索查询
+6. **只返回JSON**：不要有任何其他文字说明
+
+---
+
+## 返回格式示例
+
+**重要**：以下所有字段都是**必填项**，必须完整返回，不能省略任何字段！
+
+```json
+{{
+  "document_metadata": {{
+    "document_type": "earnings_report",
+    "company": "Tesla Inc.",
+    "period": "Q3 2025",
+    "publish_date": "2025-10-23",
+    "key_topics": ["财务表现", "交付量", "能源业务", "AI进展"]
+  }},
+  "content_summary": [
+    {{
+      "section_id": "financial_performance",
+      "section_title": "财务表现",
+      "content": "特斯拉Q3实现营收281亿美元，同比增长12%，创历史新高...",
+      "key_metrics": [
+        {{
+          "metric": "总营收",
+          "current_value": "$28.1B",
+          "previous_value": "$25.2B",
+          "change": "+12% YoY",
+          "context": "主要由汽车交付量增长和能源业务贡献",
+          "source": "page-5#table-2",
+          "original_quote": "Total revenue reached $28.1 billion in Q3, up 12% year over year, driven primarily by growth in vehicle deliveries and our energy business."
+        }}
+      ],
+      "insights": [
+        "营收创新高但营业利润率下降501bp至5.8%，反映成本压力",
+        "自由现金流增长46%至$3.99B，显示强劲的运营效率"
+      ],
+      "citations": [
+        {{"id": "doc-p5", "location": "page-5#table-2"}}
+      ]
+    }}
+  ],
+  "key_takeaways": [
+    {{
+      "id": "takeaway-001",
+      "category": "positive",
+      "statement": "特斯拉Q3营收创历史新高，达281亿美元",
+      "evidence": "总营收$28.1B，同比增长12%",
+      "significance": "表明公司核心业务持续增长，市场需求稳健",
+      "sources": [{{"id": "doc-p5", "location": "page-5"}}]
+    }}
+  ],
+  "supplementary_research_needs": {{
+    "temporal_updates": [
+      {{
+        "id": "temporal-001",
+        "topic": "Q3财报后的市场反应和Q4业务进展",
+        "reason": "文档发布于2025-10-23，距今已2.5个月，需要了解后续进展",
+        "search_queries": [
+          "Tesla Q4 2025 delivery numbers",
+          "Tesla stock price reaction Q3 earnings",
+          "Tesla November December 2025 updates"
+        ],
+        "priority": "high"
+      }}
+    ],
+    "comparative_data": [
+      {{
+        "id": "compare-001",
+        "comparison_type": "competitors",
+        "metric": "营业利润率",
+        "reason": "Tesla利润率5.8%显著下降，需要与竞争对手对比判断是行业趋势还是个别现象",
+        "search_queries": [
+          "BYD Q3 2025 operating margin",
+          "GM Ford operating margin Q3 2025",
+          "EV industry profit margin 2025"
+        ]
+      }}
+    ],
+    "deep_dive_analysis": [
+      {{
+        "id": "deepdive-001",
+        "topic": "利润率下降的具体原因",
+        "question": "是什么导致了营业利润率从10.8%下降到5.8%？",
+        "reason": "文档仅展示结果，未详细说明成本结构变化",
+        "search_queries": [
+          "Tesla Q3 2025 cost breakdown",
+          "Tesla margin pressure 2025 reasons",
+          "Tesla manufacturing cost per vehicle 2025"
+        ]
+      }}
+    ],
+    "market_perspectives": [
+      {{
+        "id": "market-001",
+        "topic": "华尔街对Q3财报的反应",
+        "perspective_type": "analyst_ratings",
+        "search_queries": [
+          "Tesla Q3 2025 analyst ratings",
+          "Tesla stock analyst upgrade downgrade October 2025",
+          "Wall Street Tesla earnings reaction"
+        ]
+      }}
+    ]
+  }},
+  "charts_analysis": [
+    {{
+      "figure_id": "fig-1",
+      "type": "chart",
+      "title": "季度营收趋势",
+      "analysis": {{
+        "composition": "柱状图展示2024Q1-2025Q3季度营收",
+        "data_relationship": "营收呈稳步上升趋势",
+        "pattern": "Q3达到峰值281亿美元",
+        "insight": "业务增长势头良好"
+      }},
+      "description": null
+    }}
+  ]
+}}
+```
+
+---
+
+## 字段完整性检查清单
+
+在返回JSON前，请确保以下字段**全部存在**：
+
+### supplementary_research_needs 必填字段：
+- temporal_updates: 每项必须包含 `id`, `topic`, `reason`, `search_queries`, `priority`
+- comparative_data: 每项必须包含 `id`, `comparison_type`, `metric`, `reason`, `search_queries`
+- deep_dive_analysis: 每项必须包含 `id`, `topic`, `question`, `reason`, `search_queries`
+- market_perspectives: 每项必须包含 `id`, `topic`, `perspective_type`, `search_queries`
+
+### key_takeaways 必填字段：
+- 每项必须包含 `id`, `category`, `statement`, `evidence`, `significance`, `sources`
+
+如果某个维度确实没有需要补充的内容，返回空数组 `[]` 而不是省略该字段。
+
+---
+
+现在开始分析，直接返回JSON结果:

@@ -1,0 +1,32 @@
+# DeepFinance Configuration
+#
+# 推荐通过环境变量配置 API key（TAVILY_API_KEY / SERPER_API_KEY），
+# 此文件中保留空字符串占位即可；如填明文，请确保不提交到公开仓库。
+
+web_search:
+  # Search engines configuration
+  tavily:
+    api_key: ""    # 留空时回退到环境变量 TAVILY_API_KEY
+    enabled: true
+    timeout: 30  # seconds
+
+  serper:
+    api_key: ""    # 留空时回退到环境变量 SERPER_API_KEY
+    enabled: true
+    timeout: 30  # seconds
+
+  # Reserved for future implementation
+  perplexity:
+    api_key: ""
+    enabled: false
+    timeout: 30
+
+  brave:
+    api_key: ""
+    enabled: false
+    timeout: 30
+
+# Default search settings
+search_defaults:
+  max_results: 10
+  default_engine: "tavily"

@@ -1,0 +1,83 @@
+你是一位专业的金融文档分析师。你正在分析文档的**第 {chunk_index}/{total_chunks} 部分**。
+
+该部分包含以下章节：
+{section_titles}
+
+页码范围: {page_range}
+
+{figures_summary}
+{user_focus}
+
+---
+
+## 本部分文档内容
+
+{content}
+
+---
+
+## 任务
+
+请对**本部分内容**进行结构化分析，以**严格的JSON格式**返回结果。
+
+**注意**：
+- 只分析本部分的内容，不要假设或推断其他部分的信息
+- document_metadata、key_takeaways、supplementary_research_needs 将在合并阶段单独处理
+- **图表分析已在解析阶段完成**，无需重复分析，但可以在 content_summary 中引用图表洞察
+
+---
+
+## 返回格式
+
+```json
+{{
+  "content_summary": [
+    {{
+      "section_id": "章节ID（如 financial_performance）",
+      "section_title": "章节标题",
+      "content": "详细总结（保留所有关键信息、数据、观点）",
+      "key_metrics": [
+        {{
+          "metric": "指标名称",
+          "current_value": "当前值",
+          "previous_value": "对比值（如去年同期）",
+          "change": "变化（如 +12% YoY）",
+          "context": "上下文说明",
+          "source": "引用位置（如 page-5#table-2 或 fig-003）",
+          "original_quote": "英文原文引用（2-3句话，直接摘录）"
+        }}
+      ],
+      "insights": ["关键洞察1", "关键洞察2", "关键洞察3"],
+      "citations": [
+        {{"id": "doc-pN", "location": "page-N"}},
+        {{"id": "fig-N", "location": "source/images/pN_fig_NNN.png"}}
+      ]
+    }}
+  ]
+}}
+```
+
+---
+
+## 引用格式说明
+
+在 citations 中需要标注两种类型的引用：
+
+1. **文档引用**：`{{"id": "doc-p3", "location": "page-3"}}`
+2. **图表引用**：`{{"id": "fig-003", "location": "source/images/p4_fig_003.png"}}`
+
+如果章节内容引用了图表数据或分析结果，请在 citations 中包含对应的图表引用。
+
+---
+
+## 输出要求
+
+1. **完整性**：保留本部分所有重要信息，不要过度精简
+2. **结构化**：按章节组织，便于后续合并
+3. **可追溯**：所有数据/观点都标注引用位置（页码或图表ID）
+4. **保留原文**：key_metrics 中的 original_quote 必须是英文原文
+5. **只返回JSON**：不要有任何其他文字说明
+
+---
+
+现在开始分析本部分内容，直接返回JSON结果:
