@@ -1,16 +1,16 @@
 # macro-tools
 
-宏观经济数据工具，按需扩展。
+Macroeconomic data tools, extensible on demand.
 
 ## Goal
 
-- 提供宏观指标获取接口
-- 按需扩展具体指标
-- 统一数据格式
+- Provide macroeconomic indicator retrieval interface
+- Extend specific indicators on demand
+- Unify data format
 
 ## Inputs / Outputs
 
-**Inputs**: 指标类型、时间范围、国家/地区
+**Inputs**: Indicator type, time range, country/region
 
 **Outputs**:
 ```python
@@ -23,25 +23,25 @@ ToolResult(
 
 ## Acceptance Criteria
 
-- [ ] 预留统一 MacroTool 接口
-- [ ] 按需实现具体指标
-- [ ] 带来源的结构化数据
+- [ ] Reserve unified MacroTool interface
+- [ ] Implement specific indicators on demand
+- [ ] Structured data with sources
 
 ## Potential Indicators
 
-| 指标 | 优先级 | 数据源 |
+| Indicator | Priority | Data Source |
 |------|--------|--------|
-| GDP | 按需 | AKShare |
-| CPI/PPI | 按需 | AKShare |
-| 利率/汇率 | 按需 | AKShare |
+| GDP | On demand | AKShare |
+| CPI/PPI | On demand | AKShare |
+| Interest Rate/Exchange Rate | On demand | AKShare |
 
 ## Constraints
 
-- 宏观数据更新慢，可缓存
+- Macroeconomic data updates slowly, can be cached
 
 ## Non-goals
 
-- 实时宏观数据
+- Real-time macroeconomic data
 
 ## Links
 

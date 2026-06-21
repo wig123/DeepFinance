@@ -1,54 +1,54 @@
-# DeepFinance 流程架构
+# DeepFinance Process Architecture
 
-## 核心原则
+## Core Principles
 
-- **简单优于复杂**：线性流水线替代6-Agent编排
-- **利用长上下文**：Gemini 2.5 支持1M tokens，全文档分析无需RAG
-- **完整总结优先**：8章节详细总结（25指标+30洞察）替代稀疏要点
-- **结构化研究需求**：4维度补充研究（时效性+对比+深度+市场观点）
-- **成本优化**：全流程使用Gemini Flash Lite（~$0.02/报告）
-- **完全追溯**：每步输出独立JSON，引用链精确到页面/表格
+- **Simplicity over Complexity**: Linear pipeline replaces 6-Agent orchestration
+- **Leverage Long Context**: Gemini 2.5 supports 1M tokens, full document analysis without RAG
+- **Complete Summary First**: 8-chapter detailed summary (25 metrics + 30 insights) replaces sparse bullet points
+- **Structured Research Needs**: 4-dimension supplementary research (timeliness + comparison + depth + market views)
+- **Cost Optimization**: Full pipeline uses Gemini Flash Lite (~$0.02/report)
+- **Full Traceability**: Each step outputs independent JSON, citations precise to page/table level
 
-## 流程架构
+## Process Architecture
 
 ```
-PDF文档 → [1.解析] → [2.分析] → [2.5.研究]* → [3.生成] → Markdown报告
-          75.7秒       54.3秒        可选         20.2秒
-           ↓            ↓             ↓             ↓
-        source/    01_analysis.json  02_research.json  report.md
-     (content.md   (8章节+25指标    (补充数据)      (完整报告)
-      +17图片)     +4维度需求)
+PDF Document → [1.Parse] → [2.Analyze] → [2.5.Research]* → [3.Generate] → Markdown Report
+                75.7s        54.3s          Optional          20.2s
+                 ↓            ↓               ↓                 ↓
+              source/    01_analysis.json  02_research.json  report.md
+           (content.md   (8 chapters+25    (supplementary    (complete
+            +17 images)  metrics+4 dims)   data)             report)
 ```
 
-*研究阶段可选，minimal模式下关闭以加速验证
+*Research stage is optional, disabled in minimal mode to accelerate validation
 
-## 三步流水线
+## Three-Step Pipeline
 
-### 1. PDF解析 (DoclingParser)
+### 1. PDF Parsing (DoclingParser)
 
-**输入**: PDF文档
-**处理**:
-- Docling提取文本+表格+图片
-- Claude Vision批量分析图片（可选）
-  - 阶段1: 分类（chart/illustration/icon）
-  - 阶段2: 内容描述（图表分析/插图描述）
-- 生成Markdown + metadata.json
+**Input**: PDF document
+**Processing**:
+- Docling extracts text + tables + images
+- Claude Vision batch analyzes images (optional)
+  - Stage 1: Classification (chart/illustration/icon)
+  - Stage 2: Content description (chart analysis/illustration description)
+- Generate Markdown + metadata.json
 
-**输出**: `source/{doc_name}/`
-- `content.md` - 完整文档内容
-- `metadata.json` - 图表列表+描述
-- `images/` - 提取的图片文件
+**Output**: `source/{doc_name}/`
+- `content.md` - Complete document content
+- `metadata.json` - Chart list + descriptions
+- `images/` - Extracted image files
 
 ---
 
-### 2. 文档分析 (DocumentAnalyzer)
+### 2. Document Analysis (DocumentAnalyzer)
 
-**输入**: source目录（content.md + metadata.json）
-**处理**:
-- Gemini 2.5 Flash Lite 读取完整文档（~60K字符）
-- 输出结构化JSON（完整总结+补充研究需求）
+**Input**: source directory (content.md + metadata.json)
+**Processing**:
+- Gemini 2.5 Flash Lite reads complete document (~60K characters)
+- Outputs structured JSON (complete summary + supplementary research needs)
 
-**输出**: `01_analysis.json`
+**Output**: `01_analysis.json`
 ```json
 {
   "analysis_id": "source_20260109_113358",
@@ -57,46 +57,46 @@ PDF文档 → [1.解析] → [2.分析] → [2.5.研究]* → [3.生成] → Mar
     "company": "Tesla",
     "period": "Q3 2025",
     "publish_date": "2025-10-22",
-    "key_topics": ["财务摘要", "运营摘要", "产品发布", ...]
+    "key_topics": ["Financial Summary", "Operations Summary", "Product Launch", ...]
   },
-  "content_summary": [  // 8个章节，完整文档总结
+  "content_summary": [  // 8 chapters, complete document summary
     {
       "section_id": "financial_summary",
-      "section_title": "Financial Summary (财务摘要)",
-      "content": "Q3-2025 总收入为 $28,095M，同比增长 12%...",  // 详细叙述
-      "key_metrics": [  // 6个指标（本章节）
+      "section_title": "Financial Summary",
+      "content": "Q3-2025 total revenue was $28,095M, up 12% YoY...",  // detailed narrative
+      "key_metrics": [  // 6 metrics (this chapter)
         {
-          "metric": "总收入",
+          "metric": "Total Revenue",
           "current_value": "$28,095M (Q3-2025)",
-          "previous_value": "$25,182M (Q3-2024)",  // 历史对比
-          "change": "+12% YoY",                     // 变化幅度
-          "context": "总收入",                       // 上下文
-          "source": "page-5#table-2"                 // 精确引用
+          "previous_value": "$25,182M (Q3-2024)",  // historical comparison
+          "change": "+12% YoY",                     // change magnitude
+          "context": "Total Revenue",               // context
+          "source": "page-5#table-2"                // precise citation
         }
       ],
-      "insights": [  // 4条洞察（本章节）
-        "尽管总收入创下新高，但营业收入和利润率大幅下降..."
+      "insights": [  // 4 insights (this chapter)
+        "Despite record revenue, operating income and margins declined significantly..."
       ],
       "citations": [{"id": "doc-p5", "location": "page-5"}]
     }
-    // ... 共8个章节
+    // ... 8 chapters total
   ],
-  "key_takeaways": [  // 6个关键要点
+  "key_takeaways": [  // 6 key takeaways
     {
       "id": "KT-001",
       "category": "positive",
-      "statement": "特斯拉Q3实现了创纪录的收入和自由现金流...",
-      "evidence": "总收入 $28.1B (+12% YoY)...",
-      "significance": "证明了公司在宏观不确定性下仍能实现增长",
+      "statement": "Tesla achieved record revenue and free cash flow in Q3...",
+      "evidence": "Total revenue $28.1B (+12% YoY)...",
+      "significance": "Demonstrates company's ability to grow despite macro uncertainty",
       "sources": [{"id": "source", "location": "page-5"}]
     }
   ],
-  "supplementary_research_needs": {  // 4个维度的补充研究需求
-    "temporal_updates": [  // 时效性补充
+  "supplementary_research_needs": {  // 4-dimension supplementary research needs
+    "temporal_updates": [  // timeliness supplement
       {
         "id": "temporal-001",
-        "topic": "Q4 2025 生产和交付指引",
-        "reason": "Q3 产量略低于交付量，需要了解Q4进展",
+        "topic": "Q4 2025 production and delivery guidance",
+        "reason": "Q3 production slightly below deliveries, need to understand Q4 progress",
         "search_queries": [
           "Tesla Q4 2025 production guidance update",
           "Tesla Q4 2025 delivery forecast"
@@ -104,31 +104,31 @@ PDF文档 → [1.解析] → [2.分析] → [2.5.研究]* → [3.生成] → Mar
         "priority": "high"
       }
     ],
-    "comparative_data": [  // 对比信息
+    "comparative_data": [  // comparison information
       {
         "id": "compare-001",
         "comparison_type": "competitors",
-        "metric": "平均每车成本",
-        "reason": "需要与比亚迪等竞争对手对比成本结构变化",
+        "metric": "Average cost per vehicle",
+        "reason": "Need to compare cost structure changes with competitors like BYD",
         "search_queries": [
           "EV industry average cost per vehicle Q3 2025",
           "Tesla cost per vehicle vs competitors 2025"
         ]
       }
     ],
-    "deep_dive_analysis": [  // 深度分析
+    "deep_dive_analysis": [  // deep analysis
       {
         "id": "deep-001",
-        "topic": "AI/软件盈利能力",
-        "question": "Robotaxi在Q3的具体收入贡献是多少？",
-        "reason": "当前财报中该业务的独立盈利数据不清晰",
+        "topic": "AI/software profitability",
+        "question": "What is Robotaxi's specific revenue contribution in Q3?",
+        "reason": "Current financial report lacks clarity on this business's independent profitability",
         "search_queries": ["Tesla software revenue Q3 2025 breakdown"]
       }
     ],
-    "market_perspectives": [  // 市场观点
+    "market_perspectives": [  // market views
       {
         "id": "market-001",
-        "topic": "分析师对利润率下降的看法",
+        "topic": "Analyst views on margin compression",
         "perspective_type": "analyst_ratings",
         "search_queries": [
           "Analyst reaction to Tesla Q3 2025 margin compression"
@@ -136,28 +136,28 @@ PDF文档 → [1.解析] → [2.分析] → [2.5.研究]* → [3.生成] → Mar
       }
     ]
   },
-  "charts_analysis": [...]  // 17个图表分析
+  "charts_analysis": [...]  // 17 chart analyses
 }
 ```
 
-**质量指标**（TSLA Q3 2025 测试）:
-- **8个章节**：Highlights、财务、运营、汽车、技术、能源、展望、报表
-- **25个指标**：每个都有 前值+后值+变化+上下文+来源
-- **30条洞察**：分布在8个章节中
-- **5个研究需求**：分4个维度，共13个可执行查询
-- **支持问答**：完整上下文保留，信息密度提升 60%~400%
+**Quality Metrics** (TSLA Q3 2025 test):
+- **8 chapters**: Highlights, Financials, Operations, Automotive, Technology, Energy, Outlook, Statements
+- **25 metrics**: Each with previous value + current value + change + context + source
+- **30 insights**: Distributed across 8 chapters
+- **5 research needs**: 4 dimensions, 13 executable queries total
+- **Q&A Support**: Complete context preserved, information density increased by 60%~400%
 
 ---
 
-### 2.5. 外部研究 (DataResearcher) *可选
+### 2.5. External Research (DataResearcher) *Optional
 
-**输入**: supplementary_research_needs（4个维度）
-**处理**:
-- 从4个维度收集所有search_queries（如13个）
-- Tavily并行搜索（最大并发10，Semaphore控制）
-- 按need_id聚合结果
+**Input**: supplementary_research_needs (4 dimensions)
+**Processing**:
+- Collect all search_queries from 4 dimensions (e.g., 13 queries)
+- Tavily parallel search (max concurrency 10, Semaphore controlled)
+- Aggregate results by need_id
 
-**输出**: `02_research.json`
+**Output**: `02_research.json`
 ```json
 {
   "research_id": "research_20260109_113400",
@@ -182,7 +182,7 @@ PDF文档 → [1.解析] → [2.分析] → [2.5.研究]* → [3.生成] → Mar
     "temporal-001": {
       "answered": true,
       "confidence": "high",
-      "key_findings": ["标题1", "标题2", ...],
+      "key_findings": ["Finding 1", "Finding 2", ...],
       "sources_count": 8,
       "queries_count": 3
     }
@@ -192,62 +192,62 @@ PDF文档 → [1.解析] → [2.分析] → [2.5.研究]* → [3.生成] → Mar
 
 ---
 
-### 3. 报告生成 (ReportGenerator)
+### 3. Report Generation (ReportGenerator)
 
-**输入**:
-- `01_analysis.json` - 文档分析
-- `02_research.json` - 外部研究（可选）
+**Input**:
+- `01_analysis.json` - Document analysis
+- `02_research.json` - External research (optional)
 
-**处理**:
-- Gemini/Claude整合所有数据
-- 生成Markdown报告
+**Processing**:
+- Gemini/Claude integrates all data
+- Generates Markdown report
 
-**输出**:
-- `report.md` - 最终报告（带引用）
-- `report_metadata.json` - 元数据
+**Output**:
+- `report.md` - Final report (with citations)
+- `report_metadata.json` - Metadata
 
-**报告结构**:
+**Report Structure**:
 ```markdown
-## 执行摘要
-## 核心发现
-### 1. 发现标题
-数据支撑: xxx[^doc-p5]
-对比分析: xxx[^gap-001-2]
-图表分析: xxx[^p10_fig_004.png]
+## Executive Summary
+## Core Findings
+### 1. Finding Title
+Data Support: xxx[^doc-p5]
+Comparative Analysis: xxx[^gap-001-2]
+Chart Analysis: xxx[^p10_fig_004.png]
 
-## 行业对比
-## 风险与挑战
-## 投资建议
+## Industry Comparison
+## Risks and Challenges
+## Investment Recommendations
 
-## 引用来源
-### 原始文档
-- [doc-p5]: page-5#表-2
-### 图表分析
-- [p10_fig_004.png]: 图表文件
-### 外部数据
-- [gap-001-2]: 标题 (URL)
+## Citations
+### Original Document
+- [doc-p5]: page-5#table-2
+### Chart Analysis
+- [p10_fig_004.png]: Chart file
+### External Data
+- [gap-001-2]: Title (URL)
 ```
 
-## 引用体系
+## Citation System
 
-| 类型 | 格式 | 示例 | 来源 |
-|-----|------|------|------|
-| **文档引用** | `[^doc-p{N}]` | `[^doc-p5]` | 原PDF第5页 |
-| **图表引用** | `[^{filename}]` | `[^p10_fig_004.png]` | 提取的图片 |
-| **搜索引用** | `[^gap-{N}-{M}]` | `[^gap-001-2]` | 外部搜索结果 |
+| Type | Format | Example | Source |
+|------|--------|---------|--------|
+| **Document Citation** | `[^doc-p{N}]` | `[^doc-p5]` | Original PDF page 5 |
+| **Chart Citation** | `[^{filename}]` | `[^p10_fig_004.png]` | Extracted image |
+| **Search Citation** | `[^gap-{N}-{M}]` | `[^gap-001-2]` | External search result |
 
-## 提示词管理 (`src/prompts/`)
+## Prompt Management (`src/prompts/`)
 
-所有LLM提示词解耦到独立文件，便于维护和优化。
+All LLM prompts are decoupled into independent files for easy maintenance and optimization.
 
-### 提示词列表
+### Prompt List
 
-| 文件 | 用途 | 调用位置 |
-|-----|------|---------|
-| `document_analysis.txt` | 文档分析 | `DocumentAnalyzer._build_analysis_prompt()` |
-| `report_generation.txt` | 报告生成 | `ReportGenerator._build_report_prompt()` |
+| File | Purpose | Called From |
+|------|---------|-------------|
+| `document_analysis.txt` | Document analysis | `DocumentAnalyzer._build_analysis_prompt()` |
+| `report_generation.txt` | Report generation | `ReportGenerator._build_report_prompt()` |
 
-### 使用方式
+### Usage
 
 ```python
 from src.prompts import get_document_analysis_prompt
@@ -260,147 +260,147 @@ prompt = get_document_analysis_prompt(
 )
 ```
 
-### 修改提示词
+### Modifying Prompts
 
-1. 编辑 `src/prompts/analysis/*.txt` 或 `src/prompts/generation/*.txt`
-2. 使用 `{变量名}` 标记动态内容
-3. 测试验证: `uv run python scripts/run_pipeline.py --mode minimal`
+1. Edit `src/prompts/analysis/*.txt` or `src/prompts/generation/*.txt`
+2. Use `{variable_name}` to mark dynamic content
+3. Test and validate: `uv run python scripts/run_pipeline.py --mode minimal`
 
-## 关键组件
+## Key Components
 
 ### DoclingParser (`src/tools/parser/`)
-- PDF解析（Docling）
-- 图片分析（Claude Vision，可选）
-- Markdown生成
+- PDF parsing (Docling)
+- Image analysis (Claude Vision, optional)
+- Markdown generation
 
 ### DocumentAnalyzer (`src/analyzers/document_analyzer.py`)
 - LLM: CloseAI Gemini 2.5 Flash Lite
-- 输出: 结构化JSON（5发现+4缺口）
+- Output: Structured JSON (5 findings + 4 gaps)
 
 ### DataResearcher (`src/analyzers/data_researcher.py`)
-- 搜索引擎: Tavily
-- 并发控制: Semaphore(10)
-- 异步执行: asyncio.gather
+- Search engine: Tavily
+- Concurrency control: Semaphore(10)
+- Async execution: asyncio.gather
 
 ### ReportGenerator (`src/analyzers/report_generator.py`)
 - LLM: CloseAI Gemini / Claude Sonnet
-- 输出: Markdown报告
+- Output: Markdown report
 
 ### ReportPipeline (`src/pipeline/report_pipeline.py`)
-- 编排器，顺序调用4个组件
-- 保存中间结果（JSON）
-- 记录pipeline metadata
+- Orchestrator, sequentially calls 4 components
+- Saves intermediate results (JSON)
+- Records pipeline metadata
 
-## 配置选项
+## Configuration Options
 
 ```python
 pipeline = ReportPipeline(
     output_base="outputs/",
-    enable_image_analysis=True,      # 图片分析（需Claude）
-    enable_research=True,            # 外部搜索（需Tavily）
+    enable_image_analysis=True,      # Image analysis (requires Claude)
+    enable_research=True,            # External search (requires Tavily)
     analyzer_model="gemini-2.5-flash-lite-preview-09-2025",
     generator_model="gemini-2.5-flash-lite-preview-09-2025",
     search_engine="tavily",
 )
 ```
 
-### 三种模式
+### Three Modes
 
-| 模式 | 图片分析 | 外部研究 | 用途 | 耗时 |
-|-----|---------|---------|------|------|
-| **minimal** | ❌ | ❌ | 快速验证 | ~115秒 |
-| **no-research** | ✅ | ❌ | 仅文档分析 | ~150秒 |
-| **full** | ✅ | ✅ | 完整报告 | ~200秒 |
+| Mode | Image Analysis | External Research | Purpose | Duration |
+|------|---------------|-------------------|---------|----------|
+| **minimal** | ❌ | ❌ | Quick validation | ~115s |
+| **no-research** | ✅ | ❌ | Document analysis only | ~150s |
+| **full** | ✅ | ✅ | Complete report | ~200s |
 
-## 数据模型 (`src/models/report.py`)
+## Data Models (`src/models/report.py`)
 
-所有数据结构使用Pydantic，支持：
-- 类型验证
-- JSON序列化（`model_dump(mode='json')`）
-- 自动文档生成
+All data structures use Pydantic, supporting:
+- Type validation
+- JSON serialization (`model_dump(mode='json')`)
+- Automatic documentation generation
 
-### 核心模型（新版）
+### Core Models (New Version)
 
-#### 1. 文档分析相关
+#### 1. Document Analysis Related
 ```python
-# 文档元信息
+# Document metadata
 DocumentMetadata(
-    document_type: str,           # 文档类型
-    company: str,                  # 公司名称
-    period: str,                   # 报告期间
-    publish_date: str | None,      # 发布日期
-    key_topics: list[str]          # 关键主题
+    document_type: str,           # document type
+    company: str,                  # company name
+    period: str,                   # reporting period
+    publish_date: str | None,      # publish date
+    key_topics: list[str]          # key topics
 )
 
-# 关键指标（5字段完整结构）
+# Key metric (5-field complete structure)
 KeyMetric(
-    metric: str,                   # 指标名称
-    current_value: str,            # 当前值
-    previous_value: str | None,    # 历史值（新增）
-    change: str | None,            # 变化幅度（新增）
-    context: str | None,           # 上下文说明（新增）
-    source: str                    # 引用来源
+    metric: str,                   # metric name
+    current_value: str,            # current value
+    previous_value: str | None,    # historical value (new)
+    change: str | None,            # change magnitude (new)
+    context: str | None,           # context explanation (new)
+    source: str                    # citation source
 )
 
-# 内容章节（完整总结，非稀疏要点）
+# Content section (complete summary, not sparse bullet points)
 ContentSection(
-    section_id: str,               # 章节ID
-    section_title: str,            # 章节标题
-    content: str,                  # 详细叙述性总结
-    key_metrics: list[KeyMetric],  # 本章节指标
-    insights: list[str],           # 关键洞察
-    citations: list[dict]          # 引用来源
+    section_id: str,               # section ID
+    section_title: str,            # section title
+    content: str,                  # detailed narrative summary
+    key_metrics: list[KeyMetric],  # metrics for this section
+    insights: list[str],           # key insights
+    citations: list[dict]          # citation sources
 )
 
-# 关键要点（高层总结）
+# Key takeaway (high-level summary)
 KeyTakeaway(
     id: str,
     category: str,                 # positive/negative/neutral
-    statement: str,                # 要点陈述
-    evidence: str,                 # 证据支撑
-    significance: str,             # 重要性说明
-    sources: list[dict]            # 引用来源
+    statement: str,                # takeaway statement
+    evidence: str,                 # supporting evidence
+    significance: str,             # significance explanation
+    sources: list[dict]            # citation sources
 )
 ```
 
-#### 2. 补充研究需求（4个维度）
+#### 2. Supplementary Research Needs (4 Dimensions)
 ```python
-# 时效性补充
+# Temporal update
 TemporalUpdate(
     id: str,
-    topic: str,                    # 主题
-    reason: str,                   # 为什么需要更新
-    search_queries: list[str],     # 搜索查询列表
+    topic: str,                    # topic
+    reason: str,                   # why update is needed
+    search_queries: list[str],     # search query list
     priority: str                  # high/medium/low
 )
 
-# 对比信息
+# Comparative data
 ComparativeData(
     id: str,
     comparison_type: str,          # industry_average/competitors/historical
-    metric: str,                   # 需要对比的指标
-    reason: str,                   # 对比原因
+    metric: str,                   # metric to compare
+    reason: str,                   # reason for comparison
     search_queries: list[str]
 )
 
-# 深度分析
+# Deep dive analysis
 DeepDiveAnalysis(
     id: str,
-    topic: str,                    # 深入主题
-    question: str,                 # 具体问题
-    reason: str,                   # 为什么需要深入
+    topic: str,                    # deep dive topic
+    question: str,                 # specific question
+    reason: str,                   # why deep dive is needed
     search_queries: list[str]
 )
 
-# 市场观点
+# Market perspective
 MarketPerspective(
     id: str,
-    topic: str,                    # 关注主题
+    topic: str,                    # topic of interest
     perspective_type: str,         # analyst_ratings/institutional_views
     search_queries: list[str]
 )
 
-# 补充研究需求（4维度聚合）
+# Supplementary research needs (4-dimension aggregation)
 SupplementaryResearchNeeds(
     temporal_updates: list[TemporalUpdate],
     comparative_data: list[ComparativeData],
@@ -409,115 +409,115 @@ SupplementaryResearchNeeds(
 )
 ```
 
-#### 3. 分析结果
+#### 3. Analysis Results
 ```python
 AnalysisResult(
     analysis_id: str,
-    source_document: dict,         # 源文档信息
+    source_document: dict,         # source document info
     document_metadata: DocumentMetadata,
-    content_summary: list[ContentSection],      # 8章节完整总结
-    key_takeaways: list[KeyTakeaway],           # 6个关键要点
-    supplementary_research_needs: SupplementaryResearchNeeds,  # 4维度需求
+    content_summary: list[ContentSection],      # 8-chapter complete summary
+    key_takeaways: list[KeyTakeaway],           # 6 key takeaways
+    supplementary_research_needs: SupplementaryResearchNeeds,  # 4-dimension needs
     charts_analysis: list[ChartAnalysis]
 )
 ```
 
-#### 4. 其他模型
-- `Citation` - 引用信息
-- `ChartAnalysis` - 图表分析
-- `SearchResult` - 搜索结果
-- `QueryResult` - 查询结果
-- `ResearchResult` - 研究结果
-- `ReportMetadata` - 报告元数据
+#### 4. Other Models
+- `Citation` - Citation information
+- `ChartAnalysis` - Chart analysis
+- `SearchResult` - Search results
+- `QueryResult` - Query results
+- `ResearchResult` - Research results
+- `ReportMetadata` - Report metadata
 
 ## API Provider
 
-当前支持:
-- **CloseAI** (推荐): Gemini系列，稳定可用
-- **API易**: Claude系列，部分模型可用
-- **云雾AI**: 备选
+Currently supported:
+- **CloseAI** (recommended): Gemini series, stable and available
+- **APIYi**: Claude series, some models available
+- **Yunwu AI**: Alternative
 
-配置通过环境变量:
+Configuration via environment variables:
 ```bash
 CLOSEAI_API_KEY=sk-...
 CLOSEAI_GOOGLE_BASE_URL=https://api.openai-proxy.org/google
 ```
 
-## 性能指标（实测数据）
+## Performance Metrics (Actual Test Data)
 
-### TSLA Q3 2025 测试（minimal模式，无图片分析，无外部研究）
-- **总耗时**: 150.3秒
-  - 解析阶段: 75.7秒（Docling解析PDF，17张图片提取）
-  - 分析阶段: 54.3秒（Gemini 2.5 Flash Lite，59K字符）
-  - 生成阶段: 20.2秒（Gemini 2.5 Flash Lite）
-- **成本**: ~$0.015（全Gemini Flash Lite，无图片分析）
+### TSLA Q3 2025 Test (minimal mode, no image analysis, no external research)
+- **Total Duration**: 150.3s
+  - Parsing stage: 75.7s (Docling parses PDF, extracts 17 images)
+  - Analysis stage: 54.3s (Gemini 2.5 Flash Lite, 59K characters)
+  - Generation stage: 20.2s (Gemini 2.5 Flash Lite)
+- **Cost**: ~$0.015 (all Gemini Flash Lite, no image analysis)
 
-### TSLA Q3 2025 测试（full模式，含图片+研究）
-- **预估总耗时**: ~200秒
-  - 解析阶段: ~150秒（含17张图片的Claude Vision分析）
-  - 分析阶段: ~54秒
-  - 研究阶段: ~10秒（13个查询，Tavily并行）
-  - 生成阶段: ~20秒
-- **预估成本**: ~$0.10（含Claude Vision图片分析 + Tavily搜索）
+### TSLA Q3 2025 Test (full mode, with images + research)
+- **Estimated Total Duration**: ~200s
+  - Parsing stage: ~150s (includes Claude Vision analysis of 17 images)
+  - Analysis stage: ~54s
+  - Research stage: ~10s (13 queries, Tavily parallel)
+  - Generation stage: ~20s
+- **Estimated Cost**: ~$0.10 (includes Claude Vision image analysis + Tavily search)
 
-## 质量指标（新架构）
+## Quality Metrics (New Architecture)
 
-### 信息密度
-- **章节数**: 8个（vs 旧版 3-5 核心发现）→ **+60%~167%**
-- **指标总数**: 25个，每个5字段（vs 旧版 5-10个，1-2字段）→ **+150%~400%**
-- **洞察总数**: 30条（vs 旧版 10-15条）→ **+100%~200%**
-- **内容字符数**: 3,492字详细叙述（vs 旧版稀疏要点）→ **完整上下文**
+### Information Density
+- **Chapter Count**: 8 (vs old version 3-5 core findings) → **+60%~167%**
+- **Total Metrics**: 25, each with 5 fields (vs old version 5-10, 1-2 fields) → **+150%~400%**
+- **Total Insights**: 30 (vs old version 10-15) → **+100%~200%**
+- **Content Character Count**: 3,492 characters of detailed narrative (vs old version sparse bullet points) → **Complete context**
 
-### 研究需求结构化
-- **旧版**: 模糊的"信息缺口"，无明确定义
-- **新版**: 4个维度（时效性+对比+深度+市场观点），每个都有明确的 `reason` + `search_queries`
-- **可执行性**: 100%（13个可执行查询，vs 旧版模糊问题）
+### Structured Research Needs
+- **Old Version**: Vague "information gaps", no clear definition
+- **New Version**: 4 dimensions (timeliness + comparison + depth + market views), each with explicit `reason` + `search_queries`
+- **Executability**: 100% (13 executable queries, vs old version vague questions)
 
-### 支持问答能力
-- **完整上下文保留**: ✅（8章节+25指标+30洞察）
-- **精确引用**: ✅（所有数据都有 page-X#table-Y 级别引用）
-- **历史对比**: ✅（指标都有 前值+后值+变化+上下文）
+### Q&A Support Capability
+- **Complete Context Preservation**: ✅ (8 chapters + 25 metrics + 30 insights)
+- **Precise Citations**: ✅ (all data has page-X#table-Y level citations)
+- **Historical Comparison**: ✅ (metrics all have previous value + current value + change + context)
 
-### 报告质量
-- **引用覆盖率**: 100%（所有观点都有脚注引用）
-- **报告结构**: 执行摘要+4核心发现+行业对比+风险分析+投资建议
-- **引用类型**: 3类（文档+图表+外部）
-- **可溯源性**: 完整（每个数据点都能追溯到源文档页面）
+### Report Quality
+- **Citation Coverage**: 100% (all observations have footnote citations)
+- **Report Structure**: Executive summary + 4 core findings + industry comparison + risk analysis + investment recommendations
+- **Citation Types**: 3 types (document + chart + external)
+- **Traceability**: Complete (every data point can be traced to source document page)
 
-## 架构改进对比（旧版 vs 新版）
+## Architecture Improvement Comparison (Old vs New)
 
-| 维度 | 旧版架构 | 新版架构 | 改进效果 |
-|------|---------|---------|----------|
-| **输出结构** | 3-5 个"核心发现" | 8 个完整章节（详细叙述） | +60%~167% 信息密度 |
-| **指标详细度** | 仅当前值 | 前值+后值+变化+上下文+来源（5字段） | +250% 上下文信息 |
-| **总指标数** | 5-10 个 | **25 个** | +150%~400% |
-| **洞察数** | 10-15 条 | **30 条** | +100%~200% |
-| **研究需求定义** | 模糊的"信息缺口" | 4 维度结构化（时效性+对比+深度+市场观点） | 100% 可执行 |
-| **支持问答** | ❌ 信息过于稀疏 | ✅ 完整上下文保留 | 可直接回答细节问题 |
-| **引用精确度** | 页面级别 | 页面+表格级别（如 page-5#table-2） | 更精确定位 |
+| Dimension | Old Architecture | New Architecture | Improvement |
+|-----------|-----------------|------------------|-------------|
+| **Output Structure** | 3-5 "core findings" | 8 complete chapters (detailed narrative) | +60%~167% information density |
+| **Metric Detail** | Current value only | Previous + current + change + context + source (5 fields) | +250% contextual information |
+| **Total Metrics** | 5-10 | **25** | +150%~400% |
+| **Insights** | 10-15 | **30** | +100%~200% |
+| **Research Need Definition** | Vague "information gaps" | 4-dimension structured (timeliness + comparison + depth + market views) | 100% executable |
+| **Q&A Support** | ❌ Information too sparse | ✅ Complete context preserved | Can directly answer detailed questions |
+| **Citation Precision** | Page level | Page + table level (e.g., page-5#table-2) | More precise location |
 
-### 核心设计改进
+### Core Design Improvements
 
-1. **完整总结优先**
-   - **旧版**: 提取 3-5 个"核心发现"（要点式）
-   - **新版**: 生成 8 个章节的完整叙述性总结
-   - **收益**: 信息不丢失，支持后续问答
+1. **Complete Summary First**
+   - **Old Version**: Extract 3-5 "core findings" (bullet points)
+   - **New Version**: Generate complete narrative summary of 8 chapters
+   - **Benefit**: No information loss, supports subsequent Q&A
 
-2. **指标结构化增强**
-   - **旧版**: `KeyMetric(metric, current_value, source)`
-   - **新版**: `KeyMetric(metric, current_value, previous_value, change, context, source)`
-   - **收益**: 历史对比一目了然，上下文清晰
+2. **Enhanced Metric Structuring**
+   - **Old Version**: `KeyMetric(metric, current_value, source)`
+   - **New Version**: `KeyMetric(metric, current_value, previous_value, change, context, source)`
+   - **Benefit**: Historical comparison at a glance, clear context
 
-3. **研究需求精确化**
-   - **旧版**: `InformationGap(question, search_queries)` - 定义模糊
-   - **新版**: 4 个维度，每个都有明确的 `reason` 字段说明为什么需要
-     - `TemporalUpdate` - 时效性补充（如"文档发布3个月前，需要最新进展"）
-     - `ComparativeData` - 对比信息（如"需要与比亚迪对比成本结构"）
-     - `DeepDiveAnalysis` - 深度分析（如"Robotaxi收入贡献不清晰"）
-     - `MarketPerspective` - 市场观点（如"分析师对利润率下降的看法"）
-   - **收益**: 研究目标明确，搜索可执行
+3. **Precise Research Needs**
+   - **Old Version**: `InformationGap(question, search_queries)` - vague definition
+   - **New Version**: 4 dimensions, each with explicit `reason` field explaining why needed
+     - `TemporalUpdate` - Timeliness supplement (e.g., "Document published 3 months ago, need latest developments")
+     - `ComparativeData` - Comparison information (e.g., "Need to compare cost structure with BYD")
+     - `DeepDiveAnalysis` - Deep analysis (e.g., "Robotaxi revenue contribution unclear")
+     - `MarketPerspective` - Market views (e.g., "Analyst views on margin decline")
+   - **Benefit**: Clear research objectives, executable searches
 
-4. **数据规范化**
-   - **问题**: LLM 输出不稳定（字符串 vs 列表 vs 字典）
-   - **解决**: 增加 `_normalize_key_takeaway()` 和 `_normalize_chart_analysis()` 标准化函数
-   - **收益**: Pydantic 验证通过率 100%
+4. **Data Normalization**
+   - **Problem**: Unstable LLM output (string vs list vs dict)
+   - **Solution**: Added `_normalize_key_takeaway()` and `_normalize_chart_analysis()` standardization functions
+   - **Benefit**: 100% Pydantic validation pass rate

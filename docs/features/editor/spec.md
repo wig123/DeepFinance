@@ -1,23 +1,23 @@
 # editor
 
-规划研究大纲 + 协调并行研究的 Agent。
+Agent for planning research outlines and coordinating parallel research.
 
 ## Goal
 
-- 分析任务和源文档，规划研究大纲
-- 分配子任务给 Researcher
-- 协调并行研究
+- Analyze tasks and source documents, plan research outlines
+- Assign subtasks to Researchers
+- Coordinate parallel research
 
 ## Inputs / Outputs
 
-**Inputs**: 任务描述、解析后的源文档
+**Inputs**: Task description, parsed source documents
 
 **Outputs**:
 ```python
 {
     "outline": [
-        {"section": "公司概况", "research_queries": [...]},
-        {"section": "财务分析", "research_queries": [...]}
+        {"section": "Company Overview", "research_queries": [...]},
+        {"section": "Financial Analysis", "research_queries": [...]}
     ],
     "parallel_tasks": [...]
 }
@@ -25,25 +25,25 @@
 
 ## Acceptance Criteria
 
-- [ ] 输入任务 → 输出研究大纲
-- [ ] 可分配子任务给多个 Researcher
-- [ ] 输出日志可查看
-- [ ] 集成测试通过
+- [ ] Input task → Output research outline
+- [ ] Can assign subtasks to multiple Researchers
+- [ ] Output logs are viewable
+- [ ] Integration tests pass
 
 ## Workflow
 
 ```
-源文档 + 任务 → 分析关键点 → 生成大纲 → 分配 Researcher
+Source documents + Task → Analyze key points → Generate outline → Assign Researcher
 ```
 
 ## Constraints
 
-- 大纲结构化输出
-- 每个 section 有明确的研究方向
+- Structured outline output
+- Each section has a clear research direction
 
 ## Non-goals
 
-- 直接执行研究任务
+- Directly execute research tasks
 
 ## Links
 

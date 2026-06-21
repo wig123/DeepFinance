@@ -4,33 +4,33 @@
 
 ## Why
 
-实现多源数据收集的核心模块，支持 Editor 分配的研究任务和 Writer 的动态回调。
+Core module for implementing multi-source data collection, supporting research tasks assigned by Editor and dynamic callbacks from Writer.
 
 ## Status
 
-- 核心模块已实现完成
-- 支持 financial/web/macro/parser 四类工具
-- 支持并发执行和动态回调
+- Core module implementation completed
+- Supports four types of tools: financial/web/macro/parser
+- Supports concurrent execution and dynamic callbacks
 
 ## Tasks
 
 ### Done
 
-- [x] 创建目录结构 `src/agents/researcher/`
-- [x] 实现 prompts.py - 系统提示词
-- [x] 实现 planner.py - 研究计划生成（规则引擎 + LLM 混合）
-- [x] 实现 executor.py - 并发工具调用执行
-- [x] 实现 agent.py - ResearcherAgent 主类
-- [x] 实现 __init__.py - 模块导出
-- [x] 更新 agents/__init__.py 导出
+- [x] Create directory structure `src/agents/researcher/`
+- [x] Implement prompts.py - system prompts
+- [x] Implement planner.py - research plan generation (rule engine + LLM hybrid)
+- [x] Implement executor.py - concurrent tool invocation execution
+- [x] Implement agent.py - ResearcherAgent main class
+- [x] Implement __init__.py - module exports
+- [x] Update agents/__init__.py exports
 
 ## Decisions
 
-1. **规则引擎 + LLM 混合规划**: 优先使用关键词规则快速匹配工具，复杂问题可选 LLM 规划
-2. **可靠性评分**: 结构化数据源（financial/macro）0.95，网页搜索 0.70
-3. **数据缓存**: 支持缓存已获取数据，避免重复请求
+1. **Rule Engine + LLM Hybrid Planning**: Prioritize keyword-based rules for fast tool matching, with optional LLM planning for complex queries
+2. **Reliability Scoring**: Structured data sources (financial/macro) 0.95, web search 0.70
+3. **Data Caching**: Support caching of retrieved data to avoid redundant requests
 
 ## Risks
 
-- 工具 API 可用性依赖外部服务
-- 需要配置各数据源的 API Key
+- Tool API availability depends on external services
+- Requires API Key configuration for each data source

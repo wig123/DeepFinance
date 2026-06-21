@@ -1,47 +1,47 @@
-# Feature: [功能名称]
+# Feature: [Feature Name]
 
 <!--
-🧠 高信噪比原则：
-- 只写本功能特有的业务信息
-- 不要在此解释框架/语言基础知识
-- 删除前问：去掉它损失什么？
+🧠 High Signal-to-Noise Ratio Principle:
+- Only write business information specific to this feature
+- Do not explain framework/language fundamentals here
+- Before deleting, ask: what is lost by removing it?
 -->
 
 ## Goal
 
-[1-3 条 bullet 说明这个功能要解决什么]
+[1-3 bullets explaining what problem this feature solves]
 
 -
 
 ## Inputs / Outputs
 
-**Inputs**: [来自哪些 API/事件]
+**Inputs**: [From which APIs/events]
 
-**Outputs**: [产生哪些数据/触发什么]
+**Outputs**: [What data is produced/what is triggered]
 
 ## Constraints
 
-[和这个功能强相关的约束]
+[Constraints strongly related to this feature]
 
 -
 
 ## Edge Cases
 
-<!-- 可选，列出与本功能强相关的边界情况 -->
+<!-- Optional, list edge cases strongly related to this feature -->
 
 -
 
 ## Non-goals
 
-[本功能不处理的场景]
+[Scenarios this feature does not handle]
 
 -
 
 ## Learned
 
-<!-- 功能完成时，从 log.md 提炼关键经验 -->
+<!-- When the feature is complete, distill key learnings from log.md -->
 
 ## Links
 
-- 相关 ADR: [ADR-xxxx]
-- 相关 Feature: [Feature-xxx]
+- Related ADR: [ADR-xxxx]
+- Related Feature: [Feature-xxx]

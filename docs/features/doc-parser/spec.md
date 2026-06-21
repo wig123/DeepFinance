@@ -1,43 +1,43 @@
 # doc-parser
 
-PDF 文档解析模块，使用 Docling 提取结构化内容。
+PDF document parsing module that uses Docling to extract structured content.
 
 ## Goal
 
-- 将金融 PDF（含图表、表格）解析为 Markdown + 图片
-- 保留页码信息用于溯源
-- 提取图表标题/说明文字
+- Parse financial PDFs (including charts and tables) into Markdown + images
+- Preserve page number information for traceability
+- Extract chart titles/captions
 
 ## Inputs / Outputs
 
-**Inputs**: PDF 文件路径或目录
+**Inputs**: PDF file path or directory
 
 **Outputs**:
 ```
 output/<doc_name>/
-├── content.md          # 主文档（含页码标记）
+├── content.md          # Main document (with page markers)
 ├── images/
-│   └── p3_fig_001.png  # 第3页图片
-└── metadata.json       # 元信息
+│   └── p3_fig_001.png  # Image from page 3
+└── metadata.json       # Metadata
 ```
 
 ## Acceptance Criteria
 
-- [ ] PDF → md + 图片
-- [ ] 保留页码：`<!-- page: 3 -->`
-- [ ] 提取图表标题
-- [ ] 输出 metadata.json
-- [ ] 表格转 Markdown 格式
+- [ ] PDF → md + images
+- [ ] Preserve page numbers: `<!-- page: 3 -->`
+- [ ] Extract chart titles
+- [ ] Output metadata.json
+- [ ] Convert tables to Markdown format
 
 ## Constraints
 
-- 单文档 ≤100 页
-- 图片保留原始分辨率
+- Single document ≤100 pages
+- Preserve original image resolution
 
 ## Non-goals
 
-- OCR 手写内容
-- 多语言混排
+- OCR handwritten content
+- Mixed multilingual layout
 
 ## Links
 

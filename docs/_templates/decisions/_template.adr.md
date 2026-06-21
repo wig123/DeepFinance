@@ -1,29 +1,29 @@
-# ADR-[编号]: [标题]
+# ADR-[Number]: [Title]
 
-**Date**: [日期]
+**Date**: [Date]
 **Status**: Proposed | Accepted | Deprecated | Superseded
 **Related**: [Feature-xxx, ADR-xxxx (superseded)]
 
-> 📌 每篇 ADR 只记录一个清晰的决策。
+> 📌 Each ADR records only one clear decision.
 
 ## Context
 
-[为什么现在必须做这个决定？]
+[Why must this decision be made now?]
 
 ## Decision
 
-[我们决定做什么？]
+[What have we decided to do?]
 
 ## Rationale
 
-**选择此方案**: [原因]
+**Why this option**: [Reason]
 
-**放弃的替代方案**: [原因]
+**Rejected alternatives**: [Reason]
 
 ## Consequences
 
-### 正面
+### Positive
 -
 
-### 负面/代价
+### Negative/Trade-offs
 -

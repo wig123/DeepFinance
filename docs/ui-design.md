@@ -1,116 +1,120 @@
-# DeepFinance UI/交互设计文档
+# DeepFinance UI/Interaction Design Document
 
-## 概述
+## Overview
 
-DeepFinance 前端采用类 ChatGPT 的对话式界面，提供直观的文档上传、流程可视化和报告查看体验。
+DeepFinance frontend adopts a ChatGPT-like conversational interface, providing an intuitive experience for document upload, process visualization, and report viewing.
 
-**设计原则**：
-- **简洁优先**：减少视觉干扰，聚焦核心功能
-- **渐进式展示**：分步骤展开信息，避免信息过载
-- **实时反馈**：150秒流程全程提供连续进度更新
-- **溯源可见**：引用系统作为核心价值，必须优雅且易用
+**Design Principles**:
+- **Simplicity First**: Reduce visual clutter, focus on core functionality
+- **Progressive Disclosure**: Unfold information step-by-step to avoid information overload
+- **Real-time Feedback**: Provide continuous progress updates throughout the 150-second process
+- **Traceable Sources**: Citation system as core value, must be elegant and user-friendly
 
-**技术栈**：
-- **框架**：React 18 + TypeScript
-- **样式**：Tailwind CSS 3.4+
-- **动画**：Framer Motion 11+
-- **Markdown**：React Markdown + remark-gfm
-- **图标**：Lucide React
+**Tech Stack**:
+- **Framework**: React 18 + TypeScript
+- **Styling**: Tailwind CSS 3.4+
+- **Animation**: Framer Motion 11+
+- **Markdown**: React Markdown + remark-gfm
+- **Icons**: Lucide React
 
 ---
 
-## 整体布局
+## Overall Layout
 
-### 三栏布局（桌面端）
+### Three-Column Layout (Desktop)
 
 ```
 ┌──────────────┬────────────────────────────────┬─────────────────┐
-│  项目侧边栏   │         主内容区                │  溯源面板*       │
-│  (240px)     │         (flex-1)               │  (360px)        │
+│  Project     │         Main Content           │  Source Panel*  │
+│  Sidebar     │         (flex-1)               │  (360px)        │
+│  (240px)     │                                │                 │
 │              │                                │                 │
-│ [+ 新建项目]  │  ┌──────────────────────────┐  │  [可折叠]       │
-│              │  │                          │  │                 │
-│ 📂 最近项目   │  │   欢迎页 / 流程视图 /     │  │  当前查看引用：  │
-│  • Tesla Q3  │  │   报告展示               │  │                 │
+│ [+ New       │  ┌──────────────────────────┐  │  [Collapsible]  │
+│    Project]  │  │                          │  │                 │
+│              │  │   Welcome / Pipeline /   │  │  Current        │
+│ 📂 Recent    │  │   Report View            │  │  Citation:      │
+│  • Tesla Q3  │  │                          │  │                 │
 │  • NVDA Q4   │  │                          │  │  📄 doc-p5      │
-│              │  │                          │  │  位置：第5页     │
-│ 📁 全部项目   │  │                          │  │  [查看原文]     │
-│ ⚙️  设置      │  │                          │  │                 │
+│              │  │                          │  │  Location: p5   │
+│ 📁 All       │  │                          │  │  [View Source]  │
+│ ⚙️  Settings │  │                          │  │                 │
 │              │  └──────────────────────────┘  │                 │
 └──────────────┴────────────────────────────────┴─────────────────┘
 ```
 
-*溯源面板：仅在查看报告时显示，可通过按钮折叠
+*Source Panel: Only displayed when viewing reports, collapsible via button
 
-### 响应式布局（移动端）
+### Responsive Layout (Mobile)
 
 ```
 ┌──────────────────────┐
-│  [≡] DeepFinance     │  ← 汉堡菜单
+│  [≡] DeepFinance     │  ← Hamburger menu
 ├──────────────────────┤
 │                      │
-│   主内容区（全宽）     │
+│   Main Content       │
+│   (full width)       │
 │                      │
 │                      │
 └──────────────────────┘
 
-点击引用 → 弹出模态框显示溯源信息
+Click citation → Modal shows source info
 ```
 
 ---
 
-## 页面流程设计
+## Page Flow Design
 
-### 阶段 1：欢迎引导页
+### Stage 1: Welcome Onboarding Page
 
-**布局**：
+**Layout**:
 
 ```
 ┌─────────────────────────────────────────┐
 │                                         │
 │         📊 DeepFinance                  │
-│       文档智能分析助手                   │
+│       Intelligent Document Analysis     │
 │                                         │
 │  ┌─────────────────────────────────┐   │
 │  │                                 │   │
-│  │   [拖拽文件到此 或 点击上传]     │   │
+│  │   [Drag file here or click]    │   │
 │  │                                 │   │
-│  │   支持 PDF，最大 50MB            │   │
+│  │   PDF supported, max 50MB      │   │
 │  │                                 │   │
 │  └─────────────────────────────────┘   │
 │                                         │
-│  ────────── 或者 ──────────            │
+│  ────────── or ──────────              │
 │                                         │
-│  📝 描述您的分析需求（可选）             │
+│  📝 Describe your analysis needs        │
+│     (optional)                          │
 │  ┌─────────────────────────────────┐   │
-│  │ 例如：重点分析利润率变化和       │   │
-│  │ 现金流状况...                   │   │
+│  │ e.g., Focus on profit margin    │   │
+│  │ changes and cash flow...        │   │
 │  └─────────────────────────────────┘   │
 │                                         │
-│      [快速模式]  [完整分析]             │
+│      [Quick Mode]  [Full Analysis]     │
 │                                         │
 └─────────────────────────────────────────┘
 ```
 
-**交互细节**：
+**Interaction Details**:
 
-1. **文件上传区域**：
-   - 默认状态：虚线边框，灰色背景
-   - 悬停状态：蓝色边框，背景色变浅
-   - 拖拽悬停：边框加粗，背景色高亮
-   - 上传中：显示进度条
+1. **File Upload Area**:
+   - Default state: Dashed border, gray background
+   - Hover state: Blue border, lighter background
+   - Drag hover: Thicker border, highlighted background
+   - Uploading: Display progress bar
 
-2. **用户Query输入框**：
-   - 可选，展开/折叠
-   - 占位符文本给出示例
-   - 字数限制：500字符
+2. **User Query Input**:
+   - Optional, expandable/collapsible
+   - Placeholder text provides examples
+   - Character limit: 500 characters
 
-3. **模式选择**：
-   - 快速模式（minimal）：无图片分析，无外部研究，~115秒
-   - 完整分析（full）：含图片分析+外部研究，~200秒
-   - 默认选中"完整分析"
+3. **Mode Selection**:
+   - Quick mode (minimal): No image analysis, no external research, ~115s
+   - Full analysis (full): With image analysis + external research, ~200s
+   - Default selection: "Full Analysis"
 
-**组件代码**：
+**Component Code**:
 
 ```tsx
 // components/WelcomePage.tsx
@@ -136,54 +140,54 @@ function WelcomePage() {
     });
 
     const data = await response.json();
-    // 跳转到流程视图
+    // Navigate to pipeline view
     navigate(`/projects/${data.project_id}`);
   };
 
   return (
     <div className="welcome-container">
-      {/* 文件上传 */}
+      {/* File upload */}
       <FileUploadZone
         onFileSelect={setFile}
         accept=".pdf"
         maxSize={50 * 1024 * 1024}
       />
 
-      {/* 用户Query */}
+      {/* User query */}
       <div className="mt-6">
-        <label>📝 描述您的分析需求（可选）</label>
+        <label>📝 Describe your analysis needs (optional)</label>
         <textarea
           value={userQuery}
           onChange={(e) => setUserQuery(e.target.value)}
-          placeholder="例如：重点分析利润率变化和现金流状况..."
+          placeholder="e.g., Focus on profit margin changes and cash flow..."
           maxLength={500}
           className="w-full mt-2 p-3 border rounded-lg"
         />
       </div>
 
-      {/* 模式选择 */}
+      {/* Mode selection */}
       <div className="mt-6 flex gap-4">
         <ModeButton
           selected={mode === "minimal"}
           onClick={() => setMode("minimal")}
-          label="快速模式"
-          description="~2分钟"
+          label="Quick Mode"
+          description="~2 minutes"
         />
         <ModeButton
           selected={mode === "full"}
           onClick={() => setMode("full")}
-          label="完整分析"
-          description="~3分钟"
+          label="Full Analysis"
+          description="~3 minutes"
         />
       </div>
 
-      {/* 开始按钮 */}
+      {/* Start button */}
       <button
         onClick={handleSubmit}
         disabled={!file || uploading}
         className="mt-6 btn-primary"
       >
-        {uploading ? "上传中..." : "开始分析"}
+        {uploading ? "Uploading..." : "Start Analysis"}
       </button>
     </div>
   );
@@ -192,59 +196,59 @@ function WelcomePage() {
 
 ---
 
-### 阶段 2：流程可视化
+### Stage 2: Process Visualization
 
-**布局**：
+**Layout**:
 
 ```
 ┌────────────────────────────────────────────┐
-│  🎬 正在分析您的文档...                     │
+│  🎬 Analyzing your document...             │
 │                                            │
 │  ┌──────────────────────────────────────┐ │
-│  │ 解析 ━━━━ 分析 ━━━━ 研究 ━━━━ 生成   │ │
-│  │  ✅      🔄       ⏳      ⏳          │ │
+│  │ Parse ━━━━ Analyze ━━━━ Research ━━━━│ │
+│  │  ✅      🔄       ⏳      ⏳  Generate│ │
 │  └──────────────────────────────────────┘ │
 │                                            │
 │  ┌──────────────────────────────────────┐ │
-│  │ ✅ 1. 文档解析              96.3s    │ │
-│  │  ├─ 已提取 42 页内容                │ │
-│  │  ├─ 识别 17 个图表                  │ │
-│  │  └─ 提取 8 个数据表                 │ │
+│  │ ✅ 1. Document Parsing      96.3s    │ │
+│  │  ├─ Extracted 42 pages               │ │
+│  │  ├─ Identified 17 charts             │ │
+│  │  └─ Extracted 8 data tables          │ │
 │  └──────────────────────────────────────┘ │
 │                                            │
 │  ┌──────────────────────────────────────┐ │
-│  │ 🔄 2. 智能分析中...       (54/73s)  │ │
-│  │  ├─ 财务指标分析 ━━━━━━━━░░ 80%    │ │
-│  │  ├─ 运营数据提取 ━━━━━░░░░░ 50%    │ │
-│  │  └─ 已发现 12 个关键指标            │ │
+│  │ 🔄 2. Analyzing...        (54/73s)   │ │
+│  │  ├─ Financial metrics ━━━━━━━━░░ 80% │ │
+│  │  ├─ Operational data ━━━━━░░░░░ 50%  │ │
+│  │  └─ Found 12 key metrics             │ │
 │  └──────────────────────────────────────┘ │
 │                                            │
-│  ⏳ 3. 外部研究                            │
-│     等待分析完成...                        │
+│  ⏳ 3. External Research                   │
+│     Waiting for analysis to complete...   │
 │                                            │
-│  ⏳ 4. 报告生成                            │
-│     等待研究完成...                        │
+│  ⏳ 4. Report Generation                   │
+│     Waiting for research to complete...   │
 │                                            │
 └────────────────────────────────────────────┘
 ```
 
-**动画效果**：
+**Animation Effects**:
 
-1. **步骤卡片展开**：
-   - 使用 stagger animation
-   - 从上到下依次展开，延迟 100ms
+1. **Step Card Expansion**:
+   - Use stagger animation
+   - Expand from top to bottom with 100ms delay
 
-2. **进度条动画**：
-   - 平滑的渐变色（蓝 → 绿）
-   - 使用 spring 动画，避免线性运动
+2. **Progress Bar Animation**:
+   - Smooth gradient (blue → green)
+   - Use spring animation, avoid linear motion
 
-3. **状态图标**：
-   - 待处理（⏳）：静态灰色
-   - 进行中（🔄）：旋转动画，蓝色
-   - 已完成（✅）：scale 弹出动画，绿色
-   - 错误（❌）：shake 动画，红色
+3. **Status Icons**:
+   - Pending (⏳): Static gray
+   - In Progress (🔄): Rotation animation, blue
+   - Completed (✅): Scale pop animation, green
+   - Error (❌): Shake animation, red
 
-**组件代码**：
+**Component Code**:
 
 ```tsx
 // components/PipelineProgress.tsx
@@ -255,12 +259,12 @@ function PipelineProgress({ projectId }: { projectId: string }) {
   const [stages, setStages] = useState<Stage[]>([]);
 
   useEffect(() => {
-    // 连接 WebSocket
+    // Connect WebSocket
     const ws = new WebSocket(`ws://localhost:8000/ws/projects/${projectId}`);
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      // 更新阶段状态
+      // Update stage status
       setStages((prev) => updateStages(prev, message));
     };
 
@@ -269,10 +273,10 @@ function PipelineProgress({ projectId }: { projectId: string }) {
 
   return (
     <div className="pipeline-container">
-      {/* 顶部进度条 */}
+      {/* Top progress bar */}
       <StepProgressBar stages={stages} />
 
-      {/* 阶段卡片列表 */}
+      {/* Stage card list */}
       <div className="mt-8 space-y-4">
         {stages.map((stage, index) => (
           <motion.div
@@ -290,7 +294,7 @@ function PipelineProgress({ projectId }: { projectId: string }) {
 }
 ```
 
-**StageCard 组件**：
+**StageCard Component**:
 
 ```tsx
 function StageCard({ stage }: { stage: Stage }) {
@@ -311,7 +315,7 @@ function StageCard({ stage }: { stage: Stage }) {
   return (
     <div className={`stage-card ${statusColor[stage.status]}`}>
       <div className="flex items-start justify-between">
-        {/* 左侧：图标 + 标题 */}
+        {/* Left: icon + title */}
         <div className="flex items-center gap-3">
           <span className="text-2xl">{statusIcon[stage.status]}</span>
           <div>
@@ -320,20 +324,20 @@ function StageCard({ stage }: { stage: Stage }) {
           </div>
         </div>
 
-        {/* 右侧：时长 */}
+        {/* Right: duration */}
         {stage.duration && (
           <span className="text-sm text-gray-500">{stage.duration}s</span>
         )}
       </div>
 
-      {/* 进度条（仅进行中） */}
+      {/* Progress bar (in progress only) */}
       {stage.status === "in_progress" && stage.progress !== undefined && (
         <div className="mt-3">
           <ProgressBar progress={stage.progress} />
         </div>
       )}
 
-      {/* 详细信息 */}
+      {/* Details */}
       {stage.details && (
         <div className="mt-3 text-sm text-gray-600">
           {Object.entries(stage.details).map(([key, value]) => (
@@ -350,64 +354,65 @@ function StageCard({ stage }: { stage: Stage }) {
 
 ---
 
-### 阶段 3：报告展示 + 溯源系统
+### Stage 3: Report Display + Citation System
 
-#### 3.1 报告主视图
+#### 3.1 Report Main View
 
-**布局**：
+**Layout**:
 
 ```
 ┌─────────────────────────────────┬──────────────────┐
-│  报告内容（Markdown渲染）        │  溯源面板         │
+│  Report Content (Markdown)      │  Source Panel    │
 ├─────────────────────────────────┼──────────────────┤
 │                                 │                  │
-│ ## 执行摘要                     │  点击引用后显示： │
+│ ## Executive Summary            │  After clicking  │
+│                                 │  citation:       │
+│ Tesla Q3 2025 achieved record   │                  │
+│ revenue and cash flow[^doc-p5]  │  📄 [^doc-p5]    │
+│ [^gap-2]    ↑ Hover for preview │                  │
+│                                 │  Source: Doc     │
+│ ## Key Findings                 │  Location: p5    │
 │                                 │                  │
-│ Tesla Q3 2025 实现了创纪录的     │  📄 [^doc-p5]    │
-│ 收入和现金流[^doc-p5][^gap-2]   │                  │
-│         ↑ 悬停显示预览           │  来源：原始文档   │
-│                                 │  位置：第5页 表2  │
-│ ## 核心发现                     │                  │
-│                                 │  [查看原文]       │
-│ ### 1. 财务表现强劲             │                  │
+│ ### 1. Strong Financial         │  [View Source]   │
+│        Performance              │                  │
 │                                 │  ─────────────   │
-│ 总收入达到 $28.1B，同比增长     │                  │
-│ 12%[^doc-p5]，但营业利润率      │  🌐 [^gap-2]     │
-│ 下降至 8.5%...                  │                  │
-│                                 │  来源：外部研究   │
-│ [图表：收入趋势][^fig_004]      │  标题：Tesla...  │
-│                                 │  [访问链接]       │
+│ Total revenue reached $28.1B,   │                  │
+│ up 12% YoY[^doc-p5], but        │  🌐 [^gap-2]     │
+│ operating margin declined to    │                  │
+│ 8.5%...                         │  Source: Web     │
+│                                 │  Title: Tesla... │
+│ [Chart: Revenue Trend][^fig_004]│  [Visit Link]    │
 │                                 │                  │
 └─────────────────────────────────┴──────────────────┘
 ```
 
-**引用交互**：
+**Citation Interaction**:
 
-1. **悬停预览**：
+1. **Hover Preview**:
    ```
-   鼠标悬停在 [^doc-p5] 上
+   Mouse hover on [^doc-p5]
          ↓
-   显示浮动卡片：
+   Show floating card:
    ┌──────────────────┐
-   │ 📄 文档引用       │
-   │ 位置：第5页 表2   │
-   │ 点击查看详情     │
+   │ 📄 Document      │
+   │ Location: p5     │
+   │ Click for detail │
    └──────────────────┘
    ```
 
-2. **点击展开**：
-   - 右侧溯源面板打开
-   - 滚动到对应引用
-   - 高亮当前查看的引用
+2. **Click to Expand**:
+   - Right source panel opens
+   - Scroll to corresponding citation
+   - Highlight currently viewed citation
 
-3. **引用视觉区分**：
+3. **Citation Visual Differentiation**:
    ```css
-   [^doc-p5]      → 📄 蓝色徽章（文档引用）
-   [^fig_004.png] → 📊 绿色徽章（图表引用）
-   [^gap-001-2]   → 🌐 橙色徽章（外部研究）
+   [^doc-p5]      → 📄 Blue badge (document)
+   [^fig_004.png] → 📊 Green badge (chart)
+   [^gap-001-2]   → 🌐 Orange badge (web)
    ```
 
-**组件代码**：
+**Component Code**:
 
 ```tsx
 // components/ReportViewer.tsx
@@ -418,12 +423,12 @@ function ReportViewer({ content, projectId }: ReportViewerProps) {
 
   return (
     <div className="flex h-full">
-      {/* 报告内容 */}
+      {/* Report content */}
       <div className="flex-1 overflow-auto p-8">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
-            // 拦截脚注渲染
+            // Intercept footnote rendering
             sup: ({ children }) => {
               const citationId = extractCitationId(children);
               if (!citationId) return <sup>{children}</sup>;
@@ -446,7 +451,7 @@ function ReportViewer({ content, projectId }: ReportViewerProps) {
         </ReactMarkdown>
       </div>
 
-      {/* 溯源面板 */}
+      {/* Source panel */}
       <AnimatePresence>
         {sidePanelOpen && (
           <motion.div
@@ -468,7 +473,7 @@ function ReportViewer({ content, projectId }: ReportViewerProps) {
 }
 ```
 
-**CitationLink 组件**（带悬停预览）：
+**CitationLink Component** (with hover preview):
 
 ```tsx
 function CitationLink({ citationId, onClick, children }) {
@@ -494,7 +499,7 @@ function CitationLink({ citationId, onClick, children }) {
         {children}
       </sup>
 
-      {/* 悬停预览卡片 */}
+      {/* Hover preview card */}
       {showPreview && (
         <motion.div
           initial={{ opacity: 0, y: -5 }}
@@ -502,11 +507,11 @@ function CitationLink({ citationId, onClick, children }) {
           className="absolute z-10 mt-2 p-3 bg-white shadow-lg rounded-lg border w-48"
         >
           <div className="text-sm">
-            {citationType === "document" && "📄 文档引用"}
-            {citationType === "chart" && "📊 图表引用"}
-            {citationType === "web" && "🌐 外部研究"}
+            {citationType === "document" && "📄 Document Citation"}
+            {citationType === "chart" && "📊 Chart Citation"}
+            {citationType === "web" && "🌐 External Research"}
           </div>
-          <div className="text-xs text-gray-600 mt-1">点击查看详情</div>
+          <div className="text-xs text-gray-600 mt-1">Click for details</div>
         </motion.div>
       )}
     </span>
@@ -514,27 +519,27 @@ function CitationLink({ citationId, onClick, children }) {
 }
 ```
 
-#### 3.2 溯源面板详情
+#### 3.2 Source Panel Details
 
-**文档引用展示**：
+**Document Citation Display**:
 
 ```tsx
 function DocumentCitation({ citation }) {
   return (
     <div className="space-y-3">
       <div className="bg-blue-50 p-3 rounded-lg">
-        <div className="text-sm text-gray-600">引用ID</div>
+        <div className="text-sm text-gray-600">Citation ID</div>
         <div className="font-mono text-blue-700 mt-1">{citation.id}</div>
       </div>
 
       <div className="bg-gray-50 p-3 rounded-lg">
-        <div className="text-sm text-gray-600">文档位置</div>
+        <div className="text-sm text-gray-600">Document Location</div>
         <div className="font-medium mt-1">{citation.location}</div>
       </div>
 
       {citation.source && (
         <div className="bg-gray-50 p-3 rounded-lg">
-          <div className="text-sm text-gray-600">具体引用</div>
+          <div className="text-sm text-gray-600">Specific Citation</div>
           <div className="font-medium mt-1">{citation.source}</div>
         </div>
       )}
@@ -543,7 +548,7 @@ function DocumentCitation({ citation }) {
 }
 ```
 
-**图表引用展示**（直接显示图片）：
+**Chart Citation Display** (directly display image):
 
 ```tsx
 function ChartCitation({ citation, projectId }) {
@@ -551,14 +556,14 @@ function ChartCitation({ citation, projectId }) {
 
   return (
     <div className="space-y-4">
-      {/* 图表标题 */}
+      {/* Chart title */}
       {citation.figure_analysis?.title && (
         <h4 className="font-medium text-gray-900">
           {citation.figure_analysis.title}
         </h4>
       )}
 
-      {/* 图片展示 */}
+      {/* Image display */}
       <div className="border rounded-lg overflow-hidden bg-white">
         <img
           src={imageUrl}
@@ -567,13 +572,13 @@ function ChartCitation({ citation, projectId }) {
         />
       </div>
 
-      {/* 图表分析 */}
+      {/* Chart analysis */}
       {citation.figure_analysis?.analysis && (
         <div className="bg-gray-50 p-4 rounded-lg text-sm space-y-2">
           {Object.entries(citation.figure_analysis.analysis).map(
             ([key, value]) => (
               <div key={key}>
-                <span className="font-medium text-gray-700">{key}：</span>
+                <span className="font-medium text-gray-700">{key}:</span>
                 <span className="text-gray-600">{value}</span>
               </div>
             )
@@ -581,7 +586,7 @@ function ChartCitation({ citation, projectId }) {
         </div>
       )}
 
-      {/* 文件名 */}
+      {/* Filename */}
       <div className="text-xs text-gray-500 font-mono">
         {citation.figure_id}
       </div>
@@ -590,13 +595,13 @@ function ChartCitation({ citation, projectId }) {
 }
 ```
 
-**外部链接引用展示**：
+**External Link Citation Display**:
 
 ```tsx
 function WebCitation({ citation }) {
   return (
     <div className="space-y-3">
-      {/* 标题 + 链接 */}
+      {/* Title + link */}
       <a
         href={citation.url}
         target="_blank"
@@ -607,17 +612,17 @@ function WebCitation({ citation }) {
         <ExternalLink className="w-4 h-4" />
       </a>
 
-      {/* 内容摘要 */}
+      {/* Content summary */}
       {citation.content && (
         <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 leading-relaxed">
           {citation.content}
         </div>
       )}
 
-      {/* 发布日期 */}
+      {/* Published date */}
       {citation.published_date && (
         <div className="text-xs text-gray-500">
-          发布于 {citation.published_date}
+          Published on {citation.published_date}
         </div>
       )}
     </div>
@@ -627,49 +632,49 @@ function WebCitation({ citation }) {
 
 ---
 
-## 项目管理侧边栏
+## Project Management Sidebar
 
-### 布局
+### Layout
 
 ```
 ┌─────────────────┐
 │ DeepFinance     │
 ├─────────────────┤
 │                 │
-│ [+ 新建项目]     │
+│ [+ New Project] │
 │                 │
-│ 📂 最近项目      │
+│ 📂 Recent       │
 │  ┌────────────┐ │
 │  │ Tesla Q3   │ │
-│  │ 2小时前    │ │
-│  │ ✅ 已完成   │ │
+│  │ 2 hours ago│ │
+│  │ ✅ Complete │ │
 │  └────────────┘ │
 │                 │
 │  ┌────────────┐ │
 │  │ NVDA Q4    │ │
-│  │ 昨天       │ │
-│  │ 🔄 分析中   │ │
+│  │ Yesterday  │ │
+│  │ 🔄 Running  │ │
 │  └────────────┘ │
 │                 │
-│ 📁 全部项目      │
-│ ⚙️  设置         │
-│ 📖 使用指南      │
+│ 📁 All Projects │
+│ ⚙️  Settings    │
+│ 📖 Guide        │
 │                 │
 └─────────────────┘
 ```
 
-### 项目卡片
+### Project Card
 
-**悬停效果**：
-- 背景色变深
-- 显示快捷操作按钮：重新分析、导出、删除
+**Hover Effects**:
+- Darker background
+- Show quick action buttons: Re-analyze, Export, Delete
 
-**状态指示**：
-- 🔄 处理中（蓝色动画）
-- ✅ 已完成（绿色）
-- ❌ 失败（红色）
+**Status Indicators**:
+- 🔄 Processing (blue animation)
+- ✅ Completed (green)
+- ❌ Failed (red)
 
-**代码**：
+**Code**:
 
 ```tsx
 function ProjectCard({ project }: { project: Project }) {
@@ -695,7 +700,7 @@ function ProjectCard({ project }: { project: Project }) {
         <div>{statusIcon[project.status]}</div>
       </div>
 
-      {/* 元数据 */}
+      {/* Metadata */}
       <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
         <span>{project.metadata?.company}</span>
         <span>•</span>
@@ -708,11 +713,11 @@ function ProjectCard({ project }: { project: Project }) {
 
 ---
 
-## 组件库
+## Component Library
 
 ### 1. FileUploadZone
 
-**功能**：拖拽上传 + 点击上传
+**Functionality**: Drag-and-drop upload + click upload
 
 ```tsx
 function FileUploadZone({ onFileSelect, accept, maxSize }) {
@@ -739,8 +744,8 @@ function FileUploadZone({ onFileSelect, accept, maxSize }) {
       className={`upload-zone ${isDragging ? "dragging" : ""}`}
     >
       <Upload className="w-12 h-12 text-gray-400" />
-      <p>拖拽文件到此 或 点击上传</p>
-      <p className="text-sm text-gray-500">支持 PDF，最大 50MB</p>
+      <p>Drag file here or click to upload</p>
+      <p className="text-sm text-gray-500">PDF supported, max 50MB</p>
       <input
         type="file"
         accept={accept}
@@ -754,7 +759,7 @@ function FileUploadZone({ onFileSelect, accept, maxSize }) {
 
 ### 2. ProgressBar
 
-**功能**：平滑渐变进度条
+**Functionality**: Smooth gradient progress bar
 
 ```tsx
 function ProgressBar({ progress }: { progress: number }) {
@@ -778,11 +783,11 @@ function ProgressBar({ progress }: { progress: number }) {
 
 ### 3. StepProgressBar
 
-**功能**：顶部步骤条
+**Functionality**: Top step indicator
 
 ```tsx
 function StepProgressBar({ stages }: { stages: Stage[] }) {
-  const stepNames = ["解析", "分析", "研究", "生成"];
+  const stepNames = ["Parse", "Analyze", "Research", "Generate"];
 
   return (
     <div className="flex items-center justify-between">
@@ -810,7 +815,7 @@ function StepProgressBar({ stages }: { stages: Stage[] }) {
               <div className="text-xs mt-1">{name}</div>
             </div>
 
-            {/* 连接线 */}
+            {/* Connecting line */}
             {index < stepNames.length - 1 && (
               <div className="flex-1 h-0.5 bg-gray-300 mx-2" />
             )}
@@ -822,9 +827,9 @@ function StepProgressBar({ stages }: { stages: Stage[] }) {
 }
 ```
 
-### 4. CitationModal（移动端）
+### 4. CitationModal (Mobile)
 
-**功能**：移动端引用弹窗
+**Functionality**: Mobile citation modal
 
 ```tsx
 function CitationModal({ citationId, projectId, onClose }) {
@@ -846,17 +851,17 @@ function CitationModal({ citationId, projectId, onClose }) {
           className="modal-content"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* 标题栏 */}
+          {/* Header */}
           <div className="modal-header">
             <h3>
-              {citation?.type === "document" && "📄 文档引用"}
-              {citation?.type === "chart" && "📊 图表引用"}
-              {citation?.type === "web" && "🌐 外部研究"}
+              {citation?.type === "document" && "📄 Document Citation"}
+              {citation?.type === "chart" && "📊 Chart Citation"}
+              {citation?.type === "web" && "🌐 External Research"}
             </h3>
             <button onClick={onClose}>✕</button>
           </div>
 
-          {/* 内容 */}
+          {/* Content */}
           <div className="modal-body">
             {citation?.type === "document" && (
               <DocumentCitation citation={citation} />
@@ -875,9 +880,9 @@ function CitationModal({ citationId, projectId, onClose }) {
 
 ---
 
-## 动画配置
+## Animation Configuration
 
-### Framer Motion 预设
+### Framer Motion Presets
 
 ```tsx
 // lib/animations.ts
@@ -913,9 +918,9 @@ export const slideInFromRight = {
 
 ---
 
-## 样式配置
+## Style Configuration
 
-### Tailwind 配置
+### Tailwind Configuration
 
 ```js
 // tailwind.config.js
@@ -950,46 +955,46 @@ module.exports = {
 
 ---
 
-## 响应式设计
+## Responsive Design
 
-### 断点策略
+### Breakpoint Strategy
 
 ```css
-/* 移动端：< 768px */
+/* Mobile: < 768px */
 @media (max-width: 767px) {
   .sidebar {
-    display: none; /* 隐藏侧边栏 */
+    display: none; /* Hide sidebar */
   }
   .citation-panel {
-    display: none; /* 溯源面板改为模态框 */
+    display: none; /* Source panel becomes modal */
   }
 }
 
-/* 平板：768px - 1024px */
+/* Tablet: 768px - 1024px */
 @media (min-width: 768px) and (max-width: 1023px) {
   .sidebar {
-    width: 200px; /* 缩窄侧边栏 */
+    width: 200px; /* Narrow sidebar */
   }
   .citation-panel {
-    width: 300px; /* 缩窄溯源面板 */
+    width: 300px; /* Narrow source panel */
   }
 }
 
-/* 桌面：>= 1024px */
+/* Desktop: >= 1024px */
 @media (min-width: 1024px) {
-  /* 默认布局 */
+  /* Default layout */
 }
 ```
 
 ---
 
-## 性能优化
+## Performance Optimization
 
-### 1. 虚拟滚动
+### 1. Virtual Scrolling
 
-对于长报告，使用 `react-window` 实现虚拟滚动。
+For long reports, use `react-window` to implement virtual scrolling.
 
-### 2. 懒加载图片
+### 2. Lazy Load Images
 
 ```tsx
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -1002,9 +1007,9 @@ import { LazyLoadImage } from "react-lazy-load-image-component";
 />;
 ```
 
-### 3. Markdown 渲染优化
+### 3. Markdown Rendering Optimization
 
-使用 `React.memo` 缓存 Markdown 渲染结果。
+Use `React.memo` to cache Markdown rendering results.
 
 ```tsx
 const MemoizedMarkdown = React.memo(ReactMarkdown);
@@ -1012,25 +1017,25 @@ const MemoizedMarkdown = React.memo(ReactMarkdown);
 
 ---
 
-## 总结
+## Summary
 
-### 设计亮点
+### Design Highlights
 
-✅ **渐进式展示**：从欢迎页 → 流程可视化 → 报告展示，分步引导
-✅ **实时反馈**：WebSocket 推送 + 流畅动画，150秒不枯燥
-✅ **溯源可见**：三种引用类型，图表直接展示图片
-✅ **响应式**：桌面/移动端自适应布局
+✅ **Progressive Disclosure**: From welcome page → process visualization → report display, step-by-step guidance
+✅ **Real-time Feedback**: WebSocket push + smooth animations, 150 seconds without boredom
+✅ **Traceable Sources**: Three citation types, charts directly display images
+✅ **Responsive**: Desktop/mobile adaptive layout
 
-### 技术栈
+### Tech Stack
 
 - **React 18** + TypeScript
 - **Tailwind CSS** + Framer Motion
 - **React Markdown** + remark-gfm
-- **WebSocket** 实时通信
+- **WebSocket** real-time communication
 
-### 下一步
+### Next Steps
 
-1. 创建前端项目脚手架
-2. 实现核心组件库
-3. 集成 API 和 WebSocket
-4. 测试和优化
+1. Create frontend project scaffold
+2. Implement core component library
+3. Integrate API and WebSocket
+4. Testing and optimization

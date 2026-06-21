@@ -1,15 +1,15 @@
 # publisher
 
-发布者，多格式报告导出。
+Publisher for multi-format report export.
 
 ## Goal
 
-- 将最终报告导出为 HTML/PDF/Word
-- 基本功能优先，样式后续优化
+- Export final reports to HTML/PDF/Word
+- Prioritize basic functionality, optimize styling later
 
 ## Inputs / Outputs
 
-**Inputs**: 最终报告 Markdown、图片资源
+**Inputs**: Final report Markdown, image assets
 
 **Outputs**:
 ```
@@ -21,29 +21,29 @@ outputs/<task_id>/
 
 ## Acceptance Criteria
 
-- [ ] 输出 HTML
-- [ ] 输出 PDF
-- [ ] 输出 Word
-- [ ] 图片正确嵌入
-- [ ] 引用链接可点击（HTML）
+- [ ] Output HTML
+- [ ] Output PDF
+- [ ] Output Word
+- [ ] Images correctly embedded
+- [ ] Reference links clickable (HTML)
 
 ## Tech Stack
 
-| 格式 | 工具 |
+| Format | Tool |
 |------|------|
-| HTML | Jinja2 模板 |
+| HTML | Jinja2 templates |
 | PDF | WeasyPrint |
 | Word | python-docx |
 
 ## Constraints
 
-- 基本功能优先
-- 样式后续迭代
+- Prioritize basic functionality
+- Iterate on styling later
 
 ## Non-goals
 
-- 复杂交互式图表
-- 自定义模板（第一版）
+- Complex interactive charts
+- Custom templates (first version)
 
 ## Links
 

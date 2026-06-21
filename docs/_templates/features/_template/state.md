@@ -1,41 +1,41 @@
-# State: [功能名称]
+# State: [Feature Name]
 
-**Updated**: [日期]
+**Updated**: [Date]
 
 ## Why
 
-[为什么要做这个功能/变更？1-2 句话]
+[Why is this feature/change needed? 1-2 sentences]
 
 ## Status
 
-<!-- 当前进展简要概括，2-5 行 -->
+<!-- Brief summary of current progress, 2-5 lines -->
 -
-- 主要阻塞：
+- Main blockers:
 
 ## Tasks
 
-- [ ] [任务1]
-- [ ] [任务2]
-- [ ] [任务3]
+- [ ] [Task 1]
+- [ ] [Task 2]
+- [ ] [Task 3]
 
 ### Done
-<!-- 完成的任务挪到这里 -->
+<!-- Move completed tasks here -->
 
 ## Decisions
 
-[开发过程中的关键决策]
+[Key decisions made during development]
 
-1. **[主题]**: [结论]
-   - 相关 ADR: ADR-xxxx（如有）
+1. **[Topic]**: [Conclusion]
+   - Related ADR: ADR-xxxx (if any)
 
 ## Risks
 
-[风险/未决问题]
+[Risks/Open issues]
 
 -
 
 ## Known Issues & Workarounds
 
-<!-- 踩坑 & 绕法，问题解决后删除 -->
+<!-- Issues encountered & workarounds, remove after resolved -->
 - Issue:
   - Workaround:

@@ -1,32 +1,32 @@
-# MinerU GPU 加速优化方案
+# MinerU GPU Acceleration Optimization Plan
 
-## 问题诊断
+## Problem Diagnosis
 
-| 指标 | 当前值 | 预期值 | 差距 |
+| Metric | Current Value | Expected Value | Gap |
 |------|--------|--------|------|
-| 处理速度 | 0.16 页/秒 | 1-2 页/秒 | 6-10x |
-| GPU 利用率 | 0-5% | 70-90% | 严重不足 |
-| 16页 PDF 耗时 | 98s | 8-16s | 6-10x |
+| Processing Speed | 0.16 pages/sec | 1-2 pages/sec | 6-10x |
+| GPU Utilization | 0-5% | 70-90% | Severely insufficient |
+| 16-page PDF Time | 98s | 8-16s | 6-10x |
 
-**根本原因**：GPU 加速未正确启用或配置不当
+**Root Cause**: GPU acceleration not properly enabled or misconfigured
 
 ---
 
-## 优化方案一：调整 OCR 批处理大小
+## Optimization Plan 1: Adjust OCR Batch Size
 
-### 原理
-MinerU 默认 `rec_batch_num` 较小，导致 GPU 一次只处理少量文本块。增大批处理可显著提升 GPU 利用率。
+### Principle
+MinerU's default `rec_batch_num` is too small, causing GPU to process only a few text blocks at a time. Increasing batch size can significantly improve GPU utilization.
 
-### 配置方法
+### Configuration Method
 
-编辑 `~/.magic-pdf.json`：
+Edit `~/.magic-pdf.json`:
 
 ```json
 {
   "device-mode": "cuda",
   "models-dir": "/root/mineru_models",
-  "rec_batch_num": 32,  // 默认可能是 6，增加到 32
-  "det_batch_num": 8,   // 检测批处理大小
+  "rec_batch_num": 32,  // Default may be 6, increase to 32
+  "det_batch_num": 8,   // Detection batch size
   "table-config": {
     "is_table_recog_enable": true,
     "max_time": 400
@@ -34,29 +34,29 @@ MinerU 默认 `rec_batch_num` 较小，导致 GPU 一次只处理少量文本块
 }
 ```
 
-### RTX 4090 推荐值
-- `rec_batch_num`: 32-64（24GB VRAM 充足）
+### RTX 4090 Recommended Values
+- `rec_batch_num`: 32-64 (24GB VRAM is sufficient)
 - `det_batch_num`: 8-16
 
 ---
 
-## 优化方案二：VLM 后端（视觉语言模型）
+## Optimization Plan 2: VLM Backend (Vision Language Model)
 
-### 原理
-VLM 后端使用视觉大模型，准确率更高（90%+ vs pipeline 82%+），且天然适合 GPU 推理。
+### Principle
+VLM backend uses vision large models with higher accuracy (90%+ vs pipeline 82%+) and is naturally suited for GPU inference.
 
-### 配置方法
+### Configuration Method
 
-1. **启动 VLM 服务器**：
+1. **Start VLM Server**:
 ```bash
-# 使用 vLLM 引擎（推荐）
+# Use vLLM engine (recommended)
 CUDA_VISIBLE_DEVICES=0 mineru-openai-server \
     --engine vllm \
     --port 30000 \
     --model-id "Qwen/Qwen2.5-VL-7B-Instruct"
 ```
 
-2. **配置 magic-pdf.json**：
+2. **Configure magic-pdf.json**:
 ```json
 {
   "llm-aided-config": {
@@ -68,14 +68,14 @@ CUDA_VISIBLE_DEVICES=0 mineru-openai-server \
 }
 ```
 
-3. **使用 VLM 后端解析**：
+3. **Parse using VLM backend**:
 ```bash
 mineru -p test.pdf -o output/ -b vlm-auto-engine
 ```
 
-### 多 GPU 并行
+### Multi-GPU Parallel
 ```bash
-# 2 GPU 并行
+# 2 GPU parallel
 CUDA_VISIBLE_DEVICES=0,5 mineru-openai-server \
     --engine vllm \
     --port 30000 \
@@ -84,25 +84,25 @@ CUDA_VISIBLE_DEVICES=0,5 mineru-openai-server \
 
 ---
 
-## 优化方案三：验证 PaddlePaddle GPU
+## Optimization Plan 3: Verify PaddlePaddle GPU
 
-### 检查脚本
+### Check Script
 ```python
 import paddle
 print(f"PaddlePaddle version: {paddle.__version__}")
 print(f"CUDA compiled: {paddle.device.is_compiled_with_cuda()}")
 print(f"GPU count: {paddle.device.cuda.device_count()}")
 
-# 测试 GPU 计算
+# Test GPU computation
 if paddle.device.is_compiled_with_cuda():
     x = paddle.randn([1000, 1000])
     paddle.device.cuda.synchronize()
     print("GPU compute test: PASSED")
 ```
 
-### 如果 PaddlePaddle 未使用 GPU
+### If PaddlePaddle is Not Using GPU
 
-重装 GPU 版本：
+Reinstall GPU version:
 ```bash
 pip uninstall paddlepaddle
 pip install paddlepaddle-gpu==3.0.0b2 -i https://www.paddlepaddle.org.cn/packages/stable/cu118/
@@ -110,9 +110,9 @@ pip install paddlepaddle-gpu==3.0.0b2 -i https://www.paddlepaddle.org.cn/package
 
 ---
 
-## 优化方案四：代码层面优化
+## Optimization Plan 4: Code-Level Optimization
 
-### 修改 MinerUParser 支持批处理配置
+### Modify MinerUParser to Support Batch Configuration
 
 ```python
 class MinerUParser(BaseTool):
@@ -123,9 +123,9 @@ class MinerUParser(BaseTool):
         lang: str = "en",
         enable_image_analysis: bool = False,
         image_analyzer: "ImageAnalyzer | None" = None,
-        # 新增 GPU 优化参数
-        rec_batch_num: int = 32,  # OCR 批处理大小
-        det_batch_num: int = 8,   # 检测批处理大小
+        # New GPU optimization parameters
+        rec_batch_num: int = 32,  # OCR batch size
+        det_batch_num: int = 8,   # Detection batch size
         use_cuda: bool = True,
     ):
         # ...
@@ -136,33 +136,33 @@ class MinerUParser(BaseTool):
 
 ---
 
-## 预期优化效果
+## Expected Optimization Results
 
-| 优化方案 | 预期速度提升 | 实现复杂度 |
+| Optimization Plan | Expected Speed Improvement | Implementation Complexity |
 |----------|--------------|------------|
-| 批处理大小调整 | 3-5x | 低（改配置） |
-| VLM 后端 | 2-3x | 中（需部署服务） |
-| 多 GPU 并行 | 2x | 中 |
-| **综合优化** | **6-10x** | - |
+| Batch Size Adjustment | 3-5x | Low (config change) |
+| VLM Backend | 2-3x | Medium (requires service deployment) |
+| Multi-GPU Parallel | 2x | Medium |
+| **Combined Optimization** | **6-10x** | - |
 
-**目标**：从 98s 优化到 10-16s（16页 PDF）
+**Target**: Optimize from 98s to 10-16s (16-page PDF)
 
 ---
 
-## 测试步骤
+## Testing Steps
 
-### Step 1: 验证当前配置
+### Step 1: Verify Current Configuration
 ```bash
 cat ~/.magic-pdf.json
 python3 -c "import paddle; print(paddle.device.is_compiled_with_cuda())"
 ```
 
-### Step 2: 应用批处理优化
+### Step 2: Apply Batch Optimization
 ```bash
-# 备份原配置
+# Backup original configuration
 cp ~/.magic-pdf.json ~/.magic-pdf.json.bak
 
-# 修改配置
+# Modify configuration
 cat > ~/.magic-pdf.json << 'EOF'
 {
   "device-mode": "cuda",
@@ -177,22 +177,22 @@ cat > ~/.magic-pdf.json << 'EOF'
 EOF
 ```
 
-### Step 3: 重新测试
+### Step 3: Retest
 ```bash
 cd ~/mineru_test
 time mineru -p TSLA-Q3-2025.pdf -o output_optimized/
 ```
 
-### Step 4: 监控 GPU 利用率
+### Step 4: Monitor GPU Utilization
 ```bash
-# 另一个终端
+# In another terminal
 watch -n 0.5 nvidia-smi
 ```
 
 ---
 
-## 参考资料
+## References
 
-- [GitHub Discussion #3738](https://github.com/opendatalab/MinerU/discussions/3738) - 批量处理优化
-- [GitHub Discussion #1226](https://github.com/opendatalab/MinerU/discussions/1226) - 性能基准
-- [MinerU v2.5 Release Notes](https://github.com/opendatalab/MinerU/releases) - vLLM 迁移
+- [GitHub Discussion #3738](https://github.com/opendatalab/MinerU/discussions/3738) - Batch Processing Optimization
+- [GitHub Discussion #1226](https://github.com/opendatalab/MinerU/discussions/1226) - Performance Benchmarks
+- [MinerU v2.5 Release Notes](https://github.com/opendatalab/MinerU/releases) - vLLM Migration

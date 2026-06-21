@@ -1,13 +1,13 @@
-# Log: [功能名称]
+# Log: [Feature Name]
 
-> 增量追加，记录关键事件。完成后提炼到 spec.md 的 Learned，然后删除本文件。
+> Incremental append, recording key events. After completion, distill into the Learned section of spec.md, then delete this file.
 
 ---
 
-## [日期]
+## [Date]
 
-### 创建功能
+### Feature Creation
 
-- 初始化功能文档
+- Initialize feature documentation
 
 ---

@@ -1,71 +1,71 @@
-# 分块分析架构
+# Chunked Analysis Architecture
 
-## 问题
+## Problem
 
-大型金融文档（50+ 页财报）单次 LLM 分析时：
-- 输出容易截断
-- 信息密度不均匀导致遗漏
-- 无法并行处理
+When analyzing large financial documents (50+ page financial reports) with a single LLM call:
+- Output is prone to truncation
+- Uneven information density leads to omissions
+- Cannot be processed in parallel
 
-## 解决方案
+## Solution
 
-按章节切分 → 并行分析 → 合并结果
+Split by sections → Analyze in parallel → Merge results
 
 ```
-content.md (全文)
+content.md (full text)
        │
        ▼
 ┌──────────────────┐
-│  SectionParser   │  按 ## 标题切分
+│  SectionParser   │  Split by ## headings
 └────────┬─────────┘
          │
     ┌────┴────┬────────┐
     ▼         ▼        ▼
- [块1]     [块2]    [块3]     ← 相邻章节聚合，保持语义完整
+ [Chunk 1] [Chunk 2] [Chunk 3]  ← Adjacent sections aggregated to preserve semantic integrity
     │         │        │
     ▼         ▼        ▼
- [分析1]   [分析2]  [分析3]   ← 并行 LLM 调用
+ [Analysis 1] [Analysis 2] [Analysis 3]  ← Parallel LLM calls
     │         │        │
     └────┬────┴────────┘
          ▼
 ┌──────────────────┐
-│   合并 + 全局信息  │  document_metadata, key_takeaways
+│ Merge + Global Info │  document_metadata, key_takeaways
 └──────────────────┘
 ```
 
-## 分块参数
+## Chunking Parameters
 
 ```python
-target_chunk_size = 15000    # 目标块大小（字符）
-min_chunks = 2               # 最少分块数
-max_chunks = 6               # 最多分块数
-min_doc_size_for_chunking = 20000  # 触发分块的阈值
+target_chunk_size = 15000    # Target chunk size (characters)
+min_chunks = 2               # Minimum number of chunks
+max_chunks = 6               # Maximum number of chunks
+min_doc_size_for_chunking = 20000  # Threshold to trigger chunking
 ```
 
-## 数据结构
+## Data Structures
 
-### 输入：Chunk
+### Input: Chunk
 
 ```python
 @dataclass
 class Chunk:
-    chunk_index: int           # 块索引
-    content: str               # 块内容
-    section_titles: list[str]  # 包含的章节标题
-    start_page: int | None     # 起始页
-    end_page: int | None       # 结束页
-    figures: list[str]         # 包含的图片文件名
-    char_count: int            # 字符数
+    chunk_index: int           # Chunk index
+    content: str               # Chunk content
+    section_titles: list[str]  # Section titles included
+    start_page: int | None     # Start page
+    end_page: int | None       # End page
+    figures: list[str]         # Image filenames included
+    char_count: int            # Character count
 ```
 
-### 输出：每块分析结果
+### Output: Per-chunk Analysis Results
 
 ```json
 {
   "content_summary": [
     {
       "section_title": "Q3 Performance",
-      "content": "章节摘要...",
+      "content": "Section summary...",
       "key_metrics": [
         {
           "metric": "Revenue",
@@ -75,13 +75,13 @@ class Chunk:
           "original_quote": "Revenue grew 17%..."
         }
       ],
-      "insights": ["洞察1", "洞察2"]
+      "insights": ["Insight 1", "Insight 2"]
     }
   ]
 }
 ```
 
-### 合并后全局信息
+### Merged Global Information
 
 ```json
 {
@@ -100,20 +100,20 @@ class Chunk:
 }
 ```
 
-## 关键代码路径
+## Key Code Paths
 
 ```
 src/analyzers/
-├── chunked_analyzer.py    # 分块分析主逻辑
-├── section_parser.py      # 章节切分
-└── document_analyzer.py   # 单块分析（小文档直接用）
+├── chunked_analyzer.py    # Main chunked analysis logic
+├── section_parser.py      # Section splitting
+└── document_analyzer.py   # Single chunk analysis (used directly for small documents)
 
 src/prompts/
-├── chunk_analysis.txt     # 单块分析 prompt
-└── merge_analysis.txt     # 合并生成全局信息 prompt
+├── chunk_analysis.txt     # Single chunk analysis prompt
+└── merge_analysis.txt     # Merge and generate global info prompt
 ```
 
-## 调用方式
+## Usage
 
 ```python
 from src.analyzers import ChunkedDocumentAnalyzer

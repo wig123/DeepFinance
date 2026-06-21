@@ -1,119 +1,119 @@
 # DeepFinance
 
-基于长上下文LLM的金融文档分析与深度研究报告生成系统。
+A financial document analysis and in-depth research report generation system based on long-context LLMs.
 
 ## Goals & Non-goals
 
 **Goals**:
-- 解析金融 PDF 文档（含图表）为结构化 Markdown + 图片
-- 多源金融数据采集（API、网页、数据库）
-- 动态回溯式深度研究（分析过程中可补充数据）
-- 生成可溯源的精美报告（支持 HTML/PDF/Word）
+- Parse financial PDF documents (including charts) into structured Markdown + images
+- Multi-source financial data collection (API, web, database)
+- Dynamic retrospective in-depth research (supplemental data during analysis)
+- Generate traceable, well-formatted reports (supporting HTML/PDF/Word)
 
 **Non-goals**:
-- RAG 检索系统（文档规模 <100 页，全量读取）
-- 实时交易系统
-- 数据存储/数据库管理
+- RAG retrieval system (document scale <100 pages, full content reading)
+- Real-time trading system
+- Data storage/database management
 
 ## Tech Stack
 
-- **Doc Parsing**: Docling（PDF/图片提取）+ Claude Vision（图表分析）
+- **Doc Parsing**: Docling (PDF/image extraction) + Claude Vision (chart analysis)
 - **LLM**:
-  - Gemini 2.0 Flash（文档分析，长上下文+低成本）
-  - Claude Sonnet 4.5（报告生成，质量最高）
-- **Data Sources**: Tavily Search + 金融API（AKShare/yfinance）
+  - Gemini 2.0 Flash (document analysis, long context + low cost)
+  - Claude Sonnet 4.5 (report generation, highest quality)
+- **Data Sources**: Tavily Search + financial APIs (AKShare/yfinance)
 - **Export**: WeasyPrint (PDF) / python-docx (Word)
 
 ## Directory Map
 
 ```
 DeepFinance/
-├── docs/                     # 文档
-│   ├── _ai-rules.md          # AI写作规则（必读）
-│   ├── decisions/            # 架构决策 ADR
-│   └── features/             # 功能规格
+├── docs/                     # Documentation
+│   ├── _ai-rules.md          # AI writing rules (must read)
+│   ├── decisions/            # Architecture Decision Records (ADR)
+│   └── features/             # Feature specifications
 ├── src/
-│   ├── models/               # 数据模型
-│   │   └── report.py         # 报告相关模型
-│   ├── analyzers/            # 分析器
-│   │   ├── document_analyzer.py   # 文档分析
-│   │   ├── data_researcher.py     # 数据补充
-│   │   └── report_generator.py    # 报告生成
-│   ├── pipeline/             # 流水线
-│   │   └── report_pipeline.py     # 主流水线
-│   ├── tools/                # 工具模块
-│   │   ├── parser/           # 文档解析（Docling + 图片分析）
-│   │   ├── financial/        # 金融数据工具
-│   │   ├── web/              # 网页搜索
-│   │   └── macro/            # 宏观数据
-│   └── publisher/            # 报告导出（HTML/PDF/Word）
-├── scripts/                  # 入口脚本（API 启动 / 端到端测试）
-├── outputs/                  # 生成报告目录
-└── tests/                    # 集成测试
+│   ├── models/               # Data models
+│   │   └── report.py         # Report-related models
+│   ├── analyzers/            # Analyzers
+│   │   ├── document_analyzer.py   # Document analysis
+│   │   ├── data_researcher.py     # Data supplementation
+│   │   └── report_generator.py    # Report generation
+│   ├── pipeline/             # Pipeline
+│   │   └── report_pipeline.py     # Main pipeline
+│   ├── tools/                # Tool modules
+│   │   ├── parser/           # Document parsing (Docling + image analysis)
+│   │   ├── financial/        # Financial data tools
+│   │   ├── web/              # Web search
+│   │   └── macro/            # Macro data
+│   └── publisher/            # Report export (HTML/PDF/Word)
+├── scripts/                  # Entry scripts (API startup / end-to-end tests)
+├── outputs/                  # Generated reports directory
+└── tests/                    # Integration tests
 ```
 
 ## Architecture
 
-**简化的三步流水线**：
+**Simplified three-step pipeline**:
 
 ```
 PDF → DoclingParser → DocumentAnalyzer → DataResearcher → ReportGenerator
-         (图片分析)       (Gemini分析)      (并行搜索)        (Claude生成)
+         (image analysis)  (Gemini analysis)  (parallel search)  (Claude generation)
 ```
 
-**流程说明**：
+**Process description**:
 
-1. **解析阶段**（DoclingParser）
-   - 提取文档结构（标题、段落、表格）
-   - 保存图片并智能分析（图表深度分析 vs 插图简单描述）
-   - 输出：Markdown + metadata.json
+1. **Parsing Stage** (DoclingParser)
+   - Extract document structure (headings, paragraphs, tables)
+   - Save images and intelligently analyze (in-depth chart analysis vs. simple illustration description)
+   - Output: Markdown + metadata.json
 
-2. **分析阶段**（DocumentAnalyzer）
-   - 使用Gemini 2.0 Flash一次性读取全部内容
-   - 生成执行摘要、核心发现
-   - 识别信息缺口，生成搜索查询
-   - 输出：01_analysis.json
+2. **Analysis Stage** (DocumentAnalyzer)
+   - Use Gemini 2.0 Flash to read all content at once
+   - Generate executive summary, key findings
+   - Identify information gaps, generate search queries
+   - Output: 01_analysis.json
 
-3. **研究阶段**（DataResearcher，可选）
-   - 并行执行Web搜索（Tavily）
-   - 智能调用金融API（TODO）
-   - 输出：02_research.json
+3. **Research Stage** (DataResearcher, optional)
+   - Execute web searches in parallel (Tavily)
+   - Intelligently call financial APIs (TODO)
+   - Output: 02_research.json
 
-4. **生成阶段**（ReportGenerator）
-   - 使用Claude Sonnet 4.5生成最终报告
-   - Markdown格式 + 脚注引用
-   - 输出：report.md + report_metadata.json
+4. **Generation Stage** (ReportGenerator)
+   - Use Claude Sonnet 4.5 to generate final report
+   - Markdown format + footnote citations
+   - Output: report.md + report_metadata.json
 
-**输出结构**：
+**Output structure**:
 
 ```
 outputs/TSLA-Q3-2025_20260109/
 ├── source/
-│   ├── content.md            # 解析的文档
-│   ├── metadata.json         # 元数据
-│   └── images/               # 图片
-├── 01_analysis.json          # 文档分析
-├── 02_research.json          # 补充研究
-├── report.md                 # 最终报告
-└── report_metadata.json      # 报告元数据
+│   ├── content.md            # Parsed document
+│   ├── metadata.json         # Metadata
+│   └── images/               # Images
+├── 01_analysis.json          # Document analysis
+├── 02_research.json          # Supplemental research
+├── report.md                 # Final report
+└── report_metadata.json      # Report metadata
 ```
 
 ## Commands
 
 ```bash
-# 安装依赖
+# Install dependencies
 uv sync
 
-# 运行完整流水线
+# Run full pipeline
 uv run python scripts/run_pipeline.py --mode full
 
-# 无外部研究（更快）
+# Without external research (faster)
 uv run python scripts/run_pipeline.py --mode no-research
 
-# 最小配置（全用Gemini，最便宜）
+# Minimal configuration (all Gemini, cheapest)
 uv run python scripts/run_pipeline.py --mode minimal
 
-# Python API使用
+# Python API usage
 from src.pipeline import ReportPipeline
 
 pipeline = ReportPipeline(
@@ -127,31 +127,31 @@ output_dir = pipeline.run("path/to/document.pdf")
 
 ## Rules for Claude
 
-1. **写文档前**：必须先读 `docs/_ai-rules.md`
-2. **新建功能**：**必须**使用 `./docs/_scripts/new.sh feat <name>`
-3. **工具开发**：
-   - 继承 `src/tools/base.py` 的 Tool 基类
-   - 在对应 category 目录下实现
-   - 自动注册机制，无需手动添加
-4. **数据模型**：
-   - 使用 `src/models/report.py` 中的 Pydantic 模型
-   - 所有中间结果和最终报告都使用标准化模型
-5. **引用追踪**：所有外部数据必须携带来源信息
-   - 使用 Markdown 脚注格式：`[^ref-id]`
-   - 引用定义：`[^ref-id]: [说明](位置)`
+1. **Before writing documentation**: Must read `docs/_ai-rules.md` first
+2. **New features**: **Must** use `./docs/_scripts/new.sh feat <name>`
+3. **Tool development**:
+   - Inherit from the Tool base class in `src/tools/base.py`
+   - Implement in the corresponding category directory
+   - Automatic registration mechanism, no manual addition needed
+4. **Data models**:
+   - Use Pydantic models from `src/models/report.py`
+   - All intermediate results and final reports use standardized models
+5. **Citation tracking**: All external data must carry source information
+   - Use Markdown footnote format: `[^ref-id]`
+   - Citation definition: `[^ref-id]: [description](location)`
 
 ## Key Design Principles
 
-1. **简单优于复杂**：线性流水线替代复杂的Agent编排
-2. **利用长上下文**：Gemini 2.0 Flash支持100万tokens，无需RAG
-3. **成本优化**：分析用Gemini（便宜），生成用Claude（质量高）
-4. **可追溯性**：每步输出独立JSON，便于调试和回溯
-5. **并行优化**：Research阶段使用asyncio并行查询
+1. **Simple over complex**: Linear pipeline replaces complex Agent orchestration
+2. **Leverage long context**: Gemini 2.0 Flash supports 1M tokens, no RAG needed
+3. **Cost optimization**: Use Gemini for analysis (cheap), Claude for generation (high quality)
+4. **Traceability**: Each step outputs independent JSON for easy debugging and retrospection
+5. **Parallel optimization**: Research stage uses asyncio for parallel queries
 
 ## Task State
 
-长期任务使用 Feature-centric 文档体系：
-- `docs/features/<name>/spec.md` - 功能规格（稳定）
-- `docs/features/<name>/state.md` - 进度跟踪（临时）
+Long-term tasks use a feature-centric documentation system:
+- `docs/features/<name>/spec.md` - Feature specifications (stable)
+- `docs/features/<name>/state.md` - Progress tracking (temporary)
 
-重大决策同步到 `docs/decisions/*.adr.md`
+Major decisions are synced to `docs/decisions/*.adr.md`

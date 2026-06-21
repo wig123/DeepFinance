@@ -1,4 +1,4 @@
-# ADR-002: 金融数据源选型
+# ADR-002: Financial Data Source Selection
 
 **Date**: 2025-12-26
 **Status**: Accepted
@@ -6,40 +6,40 @@
 
 ## Context
 
-需要获取金融数据（股票行情、财报、宏观指标），要求：
-- 免费/开源
-- 覆盖 A股/港股/美股
-- 稳定可靠
+Need to acquire financial data (stock quotes, financial reports, macroeconomic indicators) with the following requirements:
+- Free/open-source
+- Coverage of A-shares/Hong Kong stocks/US stocks
+- Stable and reliable
 
 ## Decision
 
-采用三层数据源策略：
+Adopt a three-tier data source strategy:
 
-| 优先级 | 数据源 | 覆盖范围 |
-|--------|--------|---------|
-| 主力 | AKShare | A股/港股/宏观 |
-| 备用 | efinance | A股（东方财富）|
-| 全球 | yfinance | 美股/全球 |
+| Priority | Data Source | Coverage |
+|----------|-------------|----------|
+| Primary | AKShare | A-shares/Hong Kong stocks/Macro |
+| Backup | efinance | A-shares (East Money) |
+| Global | yfinance | US stocks/Global |
 
 ## Rationale
 
-**选择此方案**:
-- AKShare 覆盖最全面，社区活跃
-- efinance 数据源不同，可互补
-- yfinance 是全球市场事实标准
+**Why this approach**:
+- AKShare has the most comprehensive coverage with an active community
+- efinance uses different data sources, providing complementary coverage
+- yfinance is the de facto standard for global markets
 
-**放弃的替代方案**:
-- Tushare Pro：需要积分，有频次限制
-- 付费数据源：成本考虑
+**Rejected alternatives**:
+- Tushare Pro: Requires credits with rate limits
+- Paid data sources: Cost considerations
 
 ## Consequences
 
-### 正面
-- 零成本启动
-- 多数据源互备
-- 覆盖全球主要市场
+### Positive
+- Zero-cost startup
+- Multi-source redundancy
+- Coverage of major global markets
 
-### 负面/代价
-- AKShare API 变动频繁，需锁定版本
-- yfinance 大陆访问可能需代理
-- 数据质量不如付费源
+### Negative/Trade-offs
+- AKShare API changes frequently, version pinning required
+- yfinance may require proxy for mainland China access
+- Data quality inferior to paid sources

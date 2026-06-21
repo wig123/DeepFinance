@@ -1,50 +1,50 @@
 # financial-tools
 
-金融数据工具集，基于 AKShare/efinance/yfinance。
+Financial data toolkit based on AKShare/efinance/yfinance.
 
 ## Goal
 
-- 提供统一接口的金融数据获取
-- 覆盖股票行情、财报、公司信息
-- 支持 A股/港股/美股
+- Provide unified interface for financial data retrieval
+- Cover stock quotes, financial reports, and company information
+- Support A-shares/Hong Kong stocks/US stocks
 
 ## Inputs / Outputs
 
-**Inputs**: 股票代码、数据类型、时间范围
+**Inputs**: Stock code, data type, time range
 
 **Outputs**:
 ```python
 ToolResult(
     success=True,
-    data={"symbol": "600519", "name": "贵州茅台", ...},
+    data={"symbol": "600519", "name": "Kweichow Moutai", ...},
     source="akshare"
 )
 ```
 
 ## Acceptance Criteria
 
-- [x] AKShare 适配器：尽量覆盖多的数据
-- [x] efinance 适配器：备用
-- [x] yfinance 适配器：美股/全球
-- [x] 统一 ToolResult 格式
-- [x] 数据缓存机制
+- [x] AKShare adapter: cover as much data as possible
+- [x] efinance adapter: backup
+- [x] yfinance adapter: US stocks/global
+- [x] Unified ToolResult format
+- [x] Data caching mechanism
 
 ## Data Coverage
 
-| 数据类型 | AKShare | efinance | yfinance |
+| Data Type | AKShare | efinance | yfinance |
 |---------|---------|----------|----------|
-| K线数据 | ✓ | ✓ | ✓ |
-| 财务报表 | ✓ | ✓ | ✓ |
-| 公司信息 | ✓ | ✓ | ✓ |
+| K-line data | ✓ | ✓ | ✓ |
+| Financial statements | ✓ | ✓ | ✓ |
+| Company information | ✓ | ✓ | ✓ |
 
 ## Constraints
 
-- AKShare 锁定版本（API 变动频繁）
-- yfinance 可能需代理
+- AKShare version locked (API changes frequently)
+- yfinance may require proxy
 
 ## Non-goals
 
-- 实时交易接口
+- Real-time trading interface
 
 ## Links
 

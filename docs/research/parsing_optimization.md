@@ -1,91 +1,91 @@
-# PDF Parsing 优化深度调研报告
+# PDF Parsing Optimization In-Depth Research Report
 
-## 当前状态
+## Current Status
 
-| 子阶段 | 耗时 | 占比 | 技术栈 |
+| Sub-stage | Time | Percentage | Tech Stack |
 |--------|------|------|--------|
-| Docling 解析 | 21s | 32% | TableFormer ACCURATE + MPS |
-| 图片分析 | 42.5s | 65% | Claude Vision (串行) |
-| 其他处理 | 2s | 3% | bbox 提取、Markdown 生成 |
-| **总计** | **65.5s** | 100% | |
+| Docling Parsing | 21s | 32% | TableFormer ACCURATE + MPS |
+| Image Analysis | 42.5s | 65% | Claude Vision (Serial) |
+| Other Processing | 2s | 3% | bbox extraction, Markdown generation |
+| **Total** | **65.5s** | 100% | |
 
 ---
 
-## 优化方向 1: Docling 配置优化
+## Optimization Direction 1: Docling Configuration Optimization
 
-### 1.1 TableFormer 模式切换
+### 1.1 TableFormer Mode Switching
 
 ```python
-# 当前: ACCURATE 模式
+# Current: ACCURATE mode
 pipeline_options.table_structure_options.mode = TableFormerMode.ACCURATE
 
-# 优化: FAST 模式
+# Optimized: FAST mode
 pipeline_options.table_structure_options.mode = TableFormerMode.FAST
 ```
 
-| 模式 | L4 GPU | M3 Max (MPS) | x86 CPU |
+| Mode | L4 GPU | M3 Max (MPS) | x86 CPU |
 |------|--------|--------------|---------|
-| FAST | 400ms/表 | 704ms/表 | 1.74s/表 |
+| FAST | 400ms/table | 704ms/table | 1.74s/table |
 | ACCURATE | ~2x FAST | ~2x FAST | ~2x FAST |
 
-**预期收益**: 表格处理时间减少 40-50%
+**Expected Gain**: 40-50% reduction in table processing time
 
-### 1.2 批处理大小调优
+### 1.2 Batch Size Tuning
 
 ```python
 from docling.datamodel.pipeline_options import ThreadedPdfPipelineOptions
 
 pipeline_options = ThreadedPdfPipelineOptions(
-    ocr_batch_size=64,      # 默认 4 → 64
-    layout_batch_size=64,   # 默认 4 → 64
-    table_batch_size=4,     # 目前不支持 GPU 批处理
+    ocr_batch_size=64,      # Default 4 → 64
+    layout_batch_size=64,   # Default 4 → 64
+    table_batch_size=4,     # Currently does not support GPU batching
 )
 ```
 
-**预期收益**: GPU 利用率提升，整体提速 20-30%
+**Expected Gain**: Improved GPU utilization, 20-30% overall speedup
 
-### 1.3 加速器显式配置
+### 1.3 Explicit Accelerator Configuration
 
 ```python
 from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
 
 accelerator_options = AcceleratorOptions(
-    num_threads=8,                    # 增加 CPU 线程
-    device=AcceleratorDevice.MPS,     # 显式指定 MPS
+    num_threads=8,                    # Increase CPU threads
+    device=AcceleratorDevice.MPS,     # Explicitly specify MPS
 )
 ```
 
 ---
 
-## 优化方向 2: 替换解析器
+## Optimization Direction 2: Parser Replacement
 
-### 2.1 解析器性能对比 (2025 Benchmark)
+### 2.1 Parser Performance Comparison (2025 Benchmark)
 
-| 解析器 | 速度 | 表格精度 | GPU 支持 | 特点 |
+| Parser | Speed | Table Accuracy | GPU Support | Features |
 |--------|------|----------|----------|------|
-| **pypdfium2** | 0.003s ⚡ | 无 | ❌ | 纯文本提取，极快 |
-| **PyMuPDF4LLM** | 0.12s ⚡ | 差 | ❌ | 速度快，表格差 |
-| **MinerU** | 0.21s/页 | 优 | ✅ CUDA | 4x 快于 Marker |
-| **Marker** | 0.86s/页 | 优 | ✅ CUDA/MPS | 结构保真度高 |
-| **Docling** | 4s/页 | 97.9% | ✅ CUDA/MPS | 表格最准 |
+| **pypdfium2** | 0.003s ⚡ | None | ❌ | Pure text extraction, extremely fast |
+| **PyMuPDF4LLM** | 0.12s ⚡ | Poor | ❌ | Fast, poor table handling |
+| **MinerU** | 0.21s/page | Excellent | ✅ CUDA | 4x faster than Marker |
+| **Marker** | 0.86s/page | Excellent | ✅ CUDA/MPS | High structural fidelity |
+| **Docling** | 4s/page | 97.9% | ✅ CUDA/MPS | Best table accuracy |
 
-### 2.2 推荐替换方案
+### 2.2 Recommended Replacement Solutions
 
-#### 方案 A: 混合策略 (速度 + 质量)
+#### Solution A: Hybrid Strategy (Speed + Quality)
 
 ```python
-# 简单文档 → PyMuPDF4LLM (0.12s)
-# 复杂表格 → Docling (4s)
+# Simple documents → PyMuPDF4LLM (0.12s)
+# Complex tables → Docling (4s)
 
 def smart_parse(pdf_path):
-    # 快速预检测
+    # Quick pre-detection
     if has_complex_tables(pdf_path):
         return docling_parse(pdf_path)
     else:
         return pymupdf4llm_parse(pdf_path)
 ```
 
-#### 方案 B: MinerU 替换
+#### Solution B: MinerU Replacement
 
 ```bash
 pip install magic-pdf
@@ -95,32 +95,32 @@ pip install magic-pdf
 from magic_pdf.data.data_reader_writer import FileBasedDataReader
 from magic_pdf.pipe.UNIPipe import UNIPipe
 
-# MinerU 配置
+# MinerU configuration
 reader = FileBasedDataReader("")
 pipe = UNIPipe(pdf_bytes, model_list=[])
 pipe.pipe_parse()
 md_content = pipe.pipe_mk_markdown()
 ```
 
-**优势**:
-- 速度: 0.21s/页 (vs Docling 4s/页) = **19x 提速**
-- 表格: 复杂表格渲染为 HTML
-- 多语言: 支持 109 种语言 OCR
+**Advantages**:
+- Speed: 0.21s/page (vs Docling 4s/page) = **19x speedup**
+- Tables: Complex tables rendered as HTML
+- Multilingual: Supports OCR for 109 languages
 
 ---
 
-## 优化方向 3: 图片分析优化
+## Optimization Direction 3: Image Analysis Optimization
 
-### 3.1 批量异步处理 (已实现但未启用)
+### 3.1 Batch Asynchronous Processing (Implemented but Not Enabled)
 
-当前代码已有 `analyze_images_batch` 但可能未充分利用：
+Current code has `analyze_images_batch` but may not be fully utilized:
 
 ```python
-# 当前: 可能串行
+# Current: Possibly serial
 for img_path in image_paths:
     result = analyze_image(img_path)
 
-# 优化: 并行批处理
+# Optimized: Parallel batch processing
 import asyncio
 
 async def batch_analyze(image_paths, batch_size=5):
@@ -133,21 +133,21 @@ async def batch_analyze(image_paths, batch_size=5):
     return results
 ```
 
-**预期收益**: 17 张图片从 42.5s → 10-12s (3-4 批并行)
+**Expected Gain**: 17 images from 42.5s → 10-12s (3-4 parallel batches)
 
-### 3.2 图片分类预筛选
+### 3.2 Image Classification Pre-filtering
 
 ```python
 def should_analyze(image_path: Path) -> bool:
-    """快速判断是否需要深度分析"""
+    """Quickly determine if deep analysis is needed"""
     from PIL import Image
     img = Image.open(image_path)
 
-    # 跳过太小的图片 (可能是图标)
+    # Skip images that are too small (possibly icons)
     if img.width < 100 or img.height < 100:
         return False
 
-    # 跳过纯色/简单图片
+    # Skip solid color/simple images
     colors = img.getcolors(maxcolors=100)
     if colors and len(colors) < 10:
         return False
@@ -155,17 +155,17 @@ def should_analyze(image_path: Path) -> bool:
     return True
 ```
 
-**预期收益**: 减少 30-50% 无效 API 调用
+**Expected Gain**: 30-50% reduction in unnecessary API calls
 
-### 3.3 本地视觉模型替代
+### 3.3 Local Vision Model Alternative
 
 ```python
-# 替代 Claude Vision 的本地方案
+# Local alternative to Claude Vision
 # 1. LLaVA-1.6 (7B)
 # 2. Qwen2-VL (7B)
 # 3. InternVL2 (8B)
 
-# 示例: 使用 Ollama + LLaVA
+# Example: Using Ollama + LLaVA
 import ollama
 
 response = ollama.generate(
@@ -175,20 +175,20 @@ response = ollama.generate(
 )
 ```
 
-**优势**:
-- 无 API 调用延迟
-- 无成本
-- 可批量处理
+**Advantages**:
+- No API call latency
+- No cost
+- Batch processing capable
 
-**劣势**:
-- 需要 GPU 内存 (7B 模型约 14GB VRAM)
-- 质量可能略低于 Claude Vision
+**Disadvantages**:
+- Requires GPU memory (7B model ~14GB VRAM)
+- Quality may be slightly lower than Claude Vision
 
 ---
 
-## 优化方向 4: 架构级优化
+## Optimization Direction 4: Architecture-Level Optimization
 
-### 4.1 增量解析 + 缓存
+### 4.1 Incremental Parsing + Caching
 
 ```python
 import hashlib
@@ -197,36 +197,36 @@ from diskcache import Cache
 cache = Cache('.cache/pdf_parse')
 
 def cached_parse(pdf_path: Path):
-    # 计算文件哈希
+    # Calculate file hash
     file_hash = hashlib.md5(pdf_path.read_bytes()).hexdigest()
 
-    # 检查缓存
+    # Check cache
     if file_hash in cache:
         return cache[file_hash]
 
-    # 解析并缓存
+    # Parse and cache
     result = docling_parse(pdf_path)
     cache[file_hash] = result
     return result
 ```
 
-### 4.2 流水线并行化
+### 4.2 Pipeline Parallelization
 
 ```
-当前: 串行
-PDF → [解析 21s] → [图片分析 42.5s] → 完成
+Current: Serial
+PDF → [Parsing 21s] → [Image Analysis 42.5s] → Complete
 
-优化: 并行
-PDF → [解析 21s] ─────────────────────→ 合并
-         └──→ [图片分析 42.5s] ────────┘
+Optimized: Parallel
+PDF → [Parsing 21s] ─────────────────────→ Merge
+         └──→ [Image Analysis 42.5s] ────────┘
 
-# 图片分析可以在解析第一张图片后立即开始
+# Image analysis can start immediately after the first image is parsed
 ```
 
-### 4.3 预热 + 模型常驻
+### 4.3 Warmup + Model Persistence
 
 ```python
-# 启动时预热模型
+# Warm up models at startup
 class DoclingParserPool:
     def __init__(self, pool_size=2):
         self.converters = [
@@ -235,60 +235,60 @@ class DoclingParserPool:
         ]
 
     def _create_converter(self):
-        # 预加载模型到内存/GPU
+        # Preload models into memory/GPU
         return DocumentConverter(...)
 
     def parse(self, pdf_path):
-        # 从池中获取可用的 converter
+        # Get available converter from pool
         converter = self.get_available()
         return converter.convert(pdf_path)
 ```
 
 ---
 
-## 优化方案对比
+## Optimization Solution Comparison
 
-| 优化方案 | 实现复杂度 | 预期收益 | 风险 |
+| Optimization Solution | Implementation Complexity | Expected Gain | Risk |
 |----------|------------|----------|------|
-| TableFormer FAST | ⭐ 低 | 20-30% | 表格精度略降 |
-| 批处理大小调优 | ⭐ 低 | 10-20% | 需要更多内存 |
-| 图片并行分析 | ⭐⭐ 中 | 30-40% | API 限流 |
-| 图片预筛选 | ⭐ 低 | 10-20% | 可能漏掉重要图片 |
-| MinerU 替换 | ⭐⭐⭐ 高 | 60-70% | 需要重构解析器 |
-| 本地视觉模型 | ⭐⭐⭐ 高 | 50-60% | 需要 GPU 资源 |
-| 缓存机制 | ⭐⭐ 中 | 首次无效，重复 90%+ | 缓存失效 |
+| TableFormer FAST | ⭐ Low | 20-30% | Slight table accuracy reduction |
+| Batch Size Tuning | ⭐ Low | 10-20% | Requires more memory |
+| Parallel Image Analysis | ⭐⭐ Medium | 30-40% | API rate limiting |
+| Image Pre-filtering | ⭐ Low | 10-20% | May miss important images |
+| MinerU Replacement | ⭐⭐⭐ High | 60-70% | Requires parser refactoring |
+| Local Vision Model | ⭐⭐⭐ High | 50-60% | Requires GPU resources |
+| Caching Mechanism | ⭐⭐ Medium | No gain on first run, 90%+ on repeat | Cache invalidation |
 
 ---
 
-## 推荐实施路径
+## Recommended Implementation Path
 
-### 阶段 1: 快速优化 (1-2 小时)
-1. ✅ TableFormer 切换到 FAST 模式
-2. ✅ 增加 batch_size 到 32-64
-3. ✅ 图片预筛选 (跳过小图标)
+### Phase 1: Quick Optimization (1-2 hours)
+1. ✅ Switch TableFormer to FAST mode
+2. ✅ Increase batch_size to 32-64
+3. ✅ Image pre-filtering (skip small icons)
 
-**预期**: 65.5s → 45s (-30%)
+**Expected**: 65.5s → 45s (-30%)
 
-### 阶段 2: 中等优化 (1-2 天)
-1. 图片分析并行化
-2. 解析器混合策略 (简单文档用 PyMuPDF)
-3. 添加解析结果缓存
+### Phase 2: Medium Optimization (1-2 days)
+1. Parallelize image analysis
+2. Hybrid parser strategy (use PyMuPDF for simple documents)
+3. Add parsing result caching
 
-**预期**: 45s → 25s (-45%)
+**Expected**: 45s → 25s (-45%)
 
-### 阶段 3: 深度优化 (1-2 周)
-1. MinerU 替换 Docling (复杂表格场景)
-2. 本地视觉模型替代 Claude Vision
-3. 流水线重构为流式处理
+### Phase 3: Deep Optimization (1-2 weeks)
+1. Replace Docling with MinerU (for complex table scenarios)
+2. Replace Claude Vision with local vision model
+3. Refactor pipeline to streaming processing
 
-**预期**: 25s → 10-15s (-60%)
+**Expected**: 25s → 10-15s (-60%)
 
 ---
 
-## 参考资源
+## References
 
-- [Docling GPU 文档](https://docling-project.github.io/docling/usage/gpu/)
+- [Docling GPU Documentation](https://docling-project.github.io/docling/usage/gpu/)
 - [MinerU GitHub](https://github.com/opendatalab/MinerU)
 - [Marker GitHub](https://github.com/datalab-to/marker)
-- [PDF 解析 Benchmark 论文](https://arxiv.org/html/2410.09871v1)
+- [PDF Parsing Benchmark Paper](https://arxiv.org/html/2410.09871v1)
 - [OmniDocBench 2025](https://github.com/opendatalab/OmniDocBench)

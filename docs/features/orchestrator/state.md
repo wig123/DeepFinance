@@ -4,37 +4,37 @@
 
 ## Why
 
-实现 LangGraph 工作流编排器，作为报告生成系统的核心调度模块。
+Implement a LangGraph workflow orchestrator as the core scheduling module for the report generation system.
 
 ## Status
 
-- 模块实现完成，所有功能验证通过
-- 支持 invoke 和 stream 两种执行方式
-- 支持 MemorySaver 断点续传
+- Module implementation completed, all functionality verified
+- Supports both invoke and stream execution modes
+- Supports MemorySaver checkpoint resumption
 
 ## Tasks
 
 ### Done
 
-- [x] 创建 src/orchestrator/ 目录结构
-- [x] 实现 nodes.py - 6 个节点函数（plan, research, write, review, publish, supplement）
-- [x] 实现 edges.py - 2 个条件路由器（review_router, data_gap_router）
-- [x] 实现 graph.py - 完整 StateGraph 定义
-- [x] 实现 __init__.py - 模块导出
-- [x] 验证 graph.invoke() 执行
-- [x] 验证 graph.stream() 执行
-- [x] 验证 checkpoint 断点续传
+- [x] Create src/orchestrator/ directory structure
+- [x] Implement nodes.py - 6 node functions (plan, research, write, review, publish, supplement)
+- [x] Implement edges.py - 2 conditional routers (review_router, data_gap_router)
+- [x] Implement graph.py - complete StateGraph definition
+- [x] Implement __init__.py - module exports
+- [x] Verify graph.invoke() execution
+- [x] Verify graph.stream() execution
+- [x] Verify checkpoint resumption
 
 ## Decisions
 
-1. **节点设计**: 当前为占位实现，后续由具体 Agent 替换
-2. **回调机制**: 通过 data_gap_router 实现 Writer 动态调用 Researcher
-3. **审核循环**: review_router 根据 review_status 决定通过或返回修改
+1. **Node Design**: Currently placeholder implementations, to be replaced by specific Agents later
+2. **Callback Mechanism**: Implemented via data_gap_router to enable Writer to dynamically invoke Researcher
+3. **Review Loop**: review_router decides whether to approve or return for revision based on review_status
 
 ## Risks
 
-无
+None
 
 ## Known Issues & Workarounds
 
-无
+None

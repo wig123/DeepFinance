@@ -1,56 +1,56 @@
-# DeepFinance API 设计文档
+# DeepFinance API Design Document
 
-## 概述
+## Overview
 
-DeepFinance 的 Web API 设计，用于连接前端 UI 和现有的 Python 后端流水线。
+Web API design for DeepFinance, connecting the frontend UI with the existing Python backend pipeline.
 
-**技术栈**：
-- **后端框架**：FastAPI 3.0+
-- **WebSocket**：用于流水线进度推送
-- **数据验证**：Pydantic（复用现有模型）
-- **文件存储**：本地文件系统（outputs/ 目录）
+**Tech Stack**:
+- **Backend Framework**: FastAPI 3.0+
+- **WebSocket**: For pipeline progress streaming
+- **Data Validation**: Pydantic (reusing existing models)
+- **File Storage**: Local filesystem (outputs/ directory)
 
 ---
 
-## 架构设计
+## Architecture Design
 
-### 服务层次
+### Service Layers
 
 ```
-前端（React）
+Frontend (React)
     ↓ HTTP/WebSocket
-FastAPI 服务层（新增）
+FastAPI Service Layer (New)
     ↓ Python API
-现有流水线（ReportPipeline）
+Existing Pipeline (ReportPipeline)
 ```
 
-### 目录结构（新增）
+### Directory Structure (New)
 
 ```
 DeepFinance/
 ├── src/
-│   ├── api/                    # 新增：API 层
+│   ├── api/                    # New: API layer
 │   │   ├── __init__.py
-│   │   ├── main.py            # FastAPI 应用入口
-│   │   ├── routes/            # 路由模块
+│   │   ├── main.py            # FastAPI application entry
+│   │   ├── routes/            # Route modules
 │   │   │   ├── __init__.py
-│   │   │   ├── projects.py    # 项目管理
-│   │   │   ├── reports.py     # 报告生成
-│   │   │   ├── citations.py   # 引用查询
-│   │   │   └── files.py       # 文件服务
-│   │   ├── schemas/           # API 数据模型
+│   │   │   ├── projects.py    # Project management
+│   │   │   ├── reports.py     # Report generation
+│   │   │   ├── citations.py   # Citation queries
+│   │   │   └── files.py       # File service
+│   │   ├── schemas/           # API data models
 │   │   │   ├── __init__.py
 │   │   │   ├── project.py
 │   │   │   ├── report.py
 │   │   │   └── citation.py
-│   │   ├── services/          # 业务逻辑
+│   │   ├── services/          # Business logic
 │   │   │   ├── __init__.py
 │   │   │   ├── project_service.py
 │   │   │   └── pipeline_service.py
-│   │   ├── websocket/         # WebSocket 处理
+│   │   ├── websocket/         # WebSocket handling
 │   │   │   ├── __init__.py
 │   │   │   └── progress.py
-│   │   └── middleware/        # 中间件
+│   │   └── middleware/        # Middleware
 │   │       ├── __init__.py
 │   │       └── cors.py
 │   └── ...
@@ -58,11 +58,11 @@ DeepFinance/
 
 ---
 
-## API 端点设计
+## API Endpoint Design
 
-### 1. 项目管理 API
+### 1. Project Management API
 
-#### 1.1 创建新项目
+#### 1.1 Create New Project
 
 ```http
 POST /api/projects
@@ -70,8 +70,8 @@ Content-Type: multipart/form-data
 
 # Request Body
 {
-  "file": <PDF文件>,
-  "user_query": "重点分析利润率变化"  # 可选
+  "file": <PDF file>,
+  "user_query": "Focus on profit margin changes"  # Optional
   "mode": "full"  # full/no-research/minimal
 }
 
@@ -84,7 +84,7 @@ Content-Type: multipart/form-data
 }
 ```
 
-**实现**：
+**Implementation**:
 ```python
 # src/api/routes/projects.py
 
@@ -95,11 +95,11 @@ async def create_project(
     mode: str = Form("full"),
     background_tasks: BackgroundTasks
 ):
-    # 1. 保存上传的文件
+    # 1. Save uploaded file
     project_id = f"proj_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     pdf_path = await save_upload_file(file, project_id)
 
-    # 2. 后台启动流水线
+    # 2. Start pipeline in background
     background_tasks.add_task(
         run_pipeline_with_progress,
         project_id=project_id,
@@ -108,7 +108,7 @@ async def create_project(
         mode=mode
     )
 
-    # 3. 返回项目信息
+    # 3. Return project information
     return {
         "project_id": project_id,
         "status": "processing",
@@ -119,7 +119,7 @@ async def create_project(
 
 ---
 
-#### 1.2 获取项目列表
+#### 1.2 Get Project List
 
 ```http
 GET /api/projects?limit=20&offset=0
@@ -146,7 +146,7 @@ GET /api/projects?limit=20&offset=0
 
 ---
 
-#### 1.3 获取项目详情
+#### 1.3 Get Project Details
 
 ```http
 GET /api/projects/{project_id}
@@ -159,7 +159,7 @@ GET /api/projects/{project_id}
   "created_at": "2026-01-09T14:30:22Z",
   "updated_at": "2026-01-09T14:35:10Z",
 
-  # 流水线进度
+  # Pipeline progress
   "pipeline": {
     "current_stage": "completed",
     "stages": [
@@ -208,7 +208,7 @@ GET /api/projects/{project_id}
     ]
   },
 
-  # 文档元数据
+  # Document metadata
   "metadata": {
     "company": "Tesla",
     "period": "Q3 2025",
@@ -216,7 +216,7 @@ GET /api/projects/{project_id}
     "publish_date": "2025-10-22"
   },
 
-  # 生成的文件
+  # Generated files
   "artifacts": {
     "report_md": "/api/projects/proj_20260109_143022/files/report.md",
     "report_html": "/api/projects/proj_20260109_143022/files/report.html",
@@ -228,7 +228,7 @@ GET /api/projects/{project_id}
 
 ---
 
-#### 1.4 删除项目
+#### 1.4 Delete Project
 
 ```http
 DELETE /api/projects/{project_id}
@@ -238,19 +238,19 @@ DELETE /api/projects/{project_id}
 
 ---
 
-### 2. 报告查看 API
+### 2. Report Viewing API
 
-#### 2.1 获取报告内容
+#### 2.1 Get Report Content
 
 ```http
 GET /api/projects/{project_id}/report?format=markdown
 
 # Query Parameters
-# - format: markdown/html/json (默认 markdown)
+# - format: markdown/html/json (default markdown)
 
 # Response 200
 {
-  "content": "## 执行摘要\n\nTesla Q3 2025...",
+  "content": "## Executive Summary\n\nTesla Q3 2025...",
   "format": "markdown",
   "metadata": {
     "title": "Tesla Q3 2025 Earnings Analysis",
@@ -262,7 +262,7 @@ GET /api/projects/{project_id}/report?format=markdown
 
 ---
 
-#### 2.2 获取分析结果
+#### 2.2 Get Analysis Results
 
 ```http
 GET /api/projects/{project_id}/analysis
@@ -292,17 +292,17 @@ GET /api/projects/{project_id}/analysis
 
 ---
 
-### 3. 引用查询 API
+### 3. Citation Query API
 
-#### 3.1 获取引用详情
+#### 3.1 Get Citation Details
 
 ```http
 GET /api/projects/{project_id}/citations/{citation_id}
 
-# 示例请求
+# Example request
 GET /api/projects/proj_20260109_143022/citations/doc-p5
 
-# Response 200 - 文档引用
+# Response 200 - Document citation
 {
   "type": "document",
   "id": "doc-p5",
@@ -310,7 +310,7 @@ GET /api/projects/proj_20260109_143022/citations/doc-p5
   "source": "page-5#table-2"
 }
 
-# Response 200 - 图表引用
+# Response 200 - Chart citation
 {
   "type": "chart",
   "figure_id": "p10_fig_004.png",
@@ -320,14 +320,14 @@ GET /api/projects/proj_20260109_143022/citations/doc-p5
     "type": "chart",
     "title": "Revenue Trend",
     "analysis": {
-      "图表构成": "柱状图 + 折线图",
-      "数据关系": "收入与利润率对比",
-      "核心洞察": "利润率持续下降"
+      "chart_composition": "Bar chart + Line chart",
+      "data_relationship": "Revenue vs profit margin comparison",
+      "key_insight": "Profit margin continues to decline"
     }
   }
 }
 
-# Response 200 - 外部引用
+# Response 200 - External citation
 {
   "type": "web",
   "title": "Tesla Q4 2025 Production Outlook",
@@ -338,7 +338,7 @@ GET /api/projects/proj_20260109_143022/citations/doc-p5
 }
 ```
 
-**实现**：
+**Implementation**:
 ```python
 # src/api/routes/citations.py
 
@@ -346,7 +346,7 @@ GET /api/projects/proj_20260109_143022/citations/doc-p5
 async def get_citation(project_id: str, citation_id: str):
     project_dir = Path(f"outputs/{project_id}")
 
-    # 文档引用
+    # Document citation
     if citation_id.startswith("doc-"):
         page = citation_id.replace("doc-p", "")
         return {
@@ -356,7 +356,7 @@ async def get_citation(project_id: str, citation_id: str):
             "source": f"page-{page}"
         }
 
-    # 图表引用
+    # Chart citation
     elif citation_id.startswith("fig_") or ".png" in citation_id:
         metadata = load_json(project_dir / "source" / "metadata.json")
         for fig in metadata.get("figures", []):
@@ -368,9 +368,9 @@ async def get_citation(project_id: str, citation_id: str):
                     "figure_url": f"/api/projects/{project_id}/files/source/{fig['path']}",
                     "figure_analysis": fig.get("analysis")
                 }
-        raise HTTPException(404, "图表未找到")
+        raise HTTPException(404, "Chart not found")
 
-    # 外部引用
+    # External citation
     elif citation_id.startswith("gap-"):
         research = load_json(project_dir / "02_research.json")
         parts = citation_id.split("-")
@@ -388,49 +388,49 @@ async def get_citation(project_id: str, citation_id: str):
                     "published_date": result.get("published_date"),
                     "relevance_score": result.get("relevance_score")
                 }
-        raise HTTPException(404, "外部引用未找到")
+        raise HTTPException(404, "External citation not found")
 
-    raise HTTPException(400, "无效的引用ID格式")
+    raise HTTPException(400, "Invalid citation ID format")
 ```
 
 ---
 
-### 4. 文件服务 API
+### 4. File Service API
 
-#### 4.1 获取文件
+#### 4.1 Get File
 
 ```http
 GET /api/projects/{project_id}/files/{file_path}
 
-# 示例
+# Examples
 GET /api/projects/proj_20260109_143022/files/source/images/p10_fig_004.png
 GET /api/projects/proj_20260109_143022/files/report.md
 GET /api/projects/proj_20260109_143022/files/01_analysis.json
 ```
 
-**实现**：
+**Implementation**:
 ```python
 # src/api/routes/files.py
 
 @router.get("/projects/{project_id}/files/{file_path:path}")
 async def get_file(project_id: str, file_path: str):
-    """静态文件服务"""
+    """Static file service"""
     file = Path(f"outputs/{project_id}/{file_path}")
 
     if not file.exists():
-        raise HTTPException(404, "文件不存在")
+        raise HTTPException(404, "File not found")
 
     return FileResponse(file)
 ```
 
 ---
 
-### 5. WebSocket 进度推送
+### 5. WebSocket Progress Streaming
 
-#### 5.1 连接 WebSocket
+#### 5.1 Connect WebSocket
 
 ```javascript
-// 前端连接示例
+// Frontend connection example
 const ws = new WebSocket(`ws://localhost:8000/ws/projects/${projectId}`);
 
 ws.onmessage = (event) => {
@@ -439,15 +439,15 @@ ws.onmessage = (event) => {
 };
 ```
 
-#### 5.2 消息格式
+#### 5.2 Message Format
 
-**解析阶段**：
+**Parsing Phase**:
 ```json
 {
   "stage": "parsing",
   "status": "in_progress",
   "progress": 0.45,
-  "message": "正在提取文档内容...",
+  "message": "Extracting document content...",
   "details": {
     "pages_extracted": 19,
     "total_pages": 42
@@ -456,13 +456,13 @@ ws.onmessage = (event) => {
 }
 ```
 
-**分析阶段**：
+**Analysis Phase**:
 ```json
 {
   "stage": "analysis",
   "status": "in_progress",
   "progress": 0.625,
-  "message": "正在分析财务指标...",
+  "message": "Analyzing financial metrics...",
   "details": {
     "sections_completed": 5,
     "total_sections": 8,
@@ -472,13 +472,13 @@ ws.onmessage = (event) => {
 }
 ```
 
-**研究阶段**：
+**Research Phase**:
 ```json
 {
   "stage": "research",
   "status": "in_progress",
   "progress": 0.77,
-  "message": "正在搜索补充数据...",
+  "message": "Searching for supplementary data...",
   "details": {
     "queries_completed": 10,
     "total_queries": 13,
@@ -488,13 +488,13 @@ ws.onmessage = (event) => {
 }
 ```
 
-**完成**：
+**Completion**:
 ```json
 {
   "stage": "generation",
   "status": "completed",
   "progress": 1.0,
-  "message": "报告生成完成",
+  "message": "Report generation completed",
   "details": {
     "report_url": "/api/projects/proj_20260109_143022/report"
   },
@@ -502,17 +502,17 @@ ws.onmessage = (event) => {
 }
 ```
 
-**错误**：
+**Error**:
 ```json
 {
   "stage": "analysis",
   "status": "failed",
   "progress": 0.4,
-  "message": "分析失败",
+  "message": "Analysis failed",
   "error": {
     "code": "LLM_API_ERROR",
     "message": "Gemini API rate limit exceeded",
-    "details": "请稍后重试"
+    "details": "Please retry later"
   },
   "timestamp": "2026-01-09T14:32:30Z"
 }
@@ -520,7 +520,7 @@ ws.onmessage = (event) => {
 
 ---
 
-#### 5.3 WebSocket 实现
+#### 5.3 WebSocket Implementation
 
 ```python
 # src/api/websocket/progress.py
@@ -530,25 +530,25 @@ from typing import Dict
 import asyncio
 
 class ProgressBroadcaster:
-    """进度广播器"""
+    """Progress broadcaster"""
 
     def __init__(self):
         self.connections: Dict[str, list[WebSocket]] = {}
 
     async def connect(self, project_id: str, websocket: WebSocket):
-        """建立连接"""
+        """Establish connection"""
         await websocket.accept()
         if project_id not in self.connections:
             self.connections[project_id] = []
         self.connections[project_id].append(websocket)
 
     def disconnect(self, project_id: str, websocket: WebSocket):
-        """断开连接"""
+        """Disconnect"""
         if project_id in self.connections:
             self.connections[project_id].remove(websocket)
 
     async def broadcast(self, project_id: str, message: dict):
-        """广播消息到所有连接"""
+        """Broadcast message to all connections"""
         if project_id in self.connections:
             for ws in self.connections[project_id]:
                 try:
@@ -556,17 +556,17 @@ class ProgressBroadcaster:
                 except Exception:
                     self.disconnect(project_id, ws)
 
-# 全局实例
+# Global instance
 broadcaster = ProgressBroadcaster()
 
 
-# WebSocket 路由
+# WebSocket route
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
     await broadcaster.connect(project_id, websocket)
     try:
         while True:
-            # 保持连接
+            # Keep connection alive
             await websocket.receive_text()
     except Exception:
         broadcaster.disconnect(project_id, websocket)
@@ -574,7 +574,7 @@ async def websocket_endpoint(websocket: WebSocket, project_id: str):
 
 ---
 
-#### 5.4 流水线集成
+#### 5.4 Pipeline Integration
 
 ```python
 # src/api/services/pipeline_service.py
@@ -587,18 +587,18 @@ async def run_pipeline_with_progress(
     user_query: str | None,
     mode: str
 ):
-    """运行流水线并推送进度"""
+    """Run pipeline and push progress updates"""
 
     try:
-        # 1. 解析阶段
+        # 1. Parsing phase
         await broadcaster.broadcast(project_id, {
             "stage": "parsing",
             "status": "in_progress",
             "progress": 0.0,
-            "message": "开始解析PDF文档..."
+            "message": "Starting PDF document parsing..."
         })
 
-        # 运行解析器（需要修改为支持进度回调）
+        # Run parser (needs modification to support progress callback)
         parser = DoclingParser()
         result = await parser.execute(
             pdf_path=pdf_path,
@@ -607,34 +607,34 @@ async def run_pipeline_with_progress(
                     "stage": "parsing",
                     "status": "in_progress",
                     "progress": p,
-                    "message": "正在提取文档内容..."
+                    "message": "Extracting document content..."
                 })
             )
         )
 
-        # 2. 分析阶段
+        # 2. Analysis phase
         await broadcaster.broadcast(project_id, {
             "stage": "analysis",
             "status": "in_progress",
             "progress": 0.0,
-            "message": "开始分析文档..."
+            "message": "Starting document analysis..."
         })
 
-        # ... 类似地处理其他阶段
+        # ... Handle other phases similarly
 
-        # 完成
+        # Completion
         await broadcaster.broadcast(project_id, {
             "stage": "generation",
             "status": "completed",
             "progress": 1.0,
-            "message": "报告生成完成",
+            "message": "Report generation completed",
             "details": {
                 "report_url": f"/api/projects/{project_id}/report"
             }
         })
 
     except Exception as e:
-        # 错误处理
+        # Error handling
         await broadcaster.broadcast(project_id, {
             "stage": "error",
             "status": "failed",
@@ -648,7 +648,7 @@ async def run_pipeline_with_progress(
 
 ---
 
-## 数据模型（API Schemas）
+## Data Models (API Schemas)
 
 ### ProjectCreate
 
@@ -658,12 +658,12 @@ async def run_pipeline_with_progress(
 from pydantic import BaseModel, Field
 
 class ProjectCreate(BaseModel):
-    """创建项目请求"""
-    user_query: str | None = Field(None, description="用户侧重点")
-    mode: str = Field("full", description="运行模式：full/no-research/minimal")
+    """Create project request"""
+    user_query: str | None = Field(None, description="User focus area")
+    mode: str = Field("full", description="Run mode: full/no-research/minimal")
 
 class ProjectResponse(BaseModel):
-    """项目响应"""
+    """Project response"""
     project_id: str
     status: str  # processing/completed/failed
     created_at: str
@@ -672,7 +672,7 @@ class ProjectResponse(BaseModel):
     metadata: dict | None = None
 
 class ProjectDetail(ProjectResponse):
-    """项目详情"""
+    """Project details"""
     pipeline: dict
     artifacts: dict
 ```
@@ -683,19 +683,19 @@ class ProjectDetail(ProjectResponse):
 # src/api/schemas/citation.py
 
 class CitationResponse(BaseModel):
-    """引用响应"""
+    """Citation response"""
     type: str  # document/chart/web
     id: str | None = None
     location: str | None = None
     source: str | None = None
 
-    # 图表引用
+    # Chart citation
     figure_id: str | None = None
     figure_path: str | None = None
     figure_url: str | None = None
     figure_analysis: dict | None = None
 
-    # 外部引用
+    # External citation
     title: str | None = None
     url: str | None = None
     content: str | None = None
@@ -703,37 +703,37 @@ class CitationResponse(BaseModel):
 
 ---
 
-## 错误处理
+## Error Handling
 
-### 标准错误响应
+### Standard Error Response
 
 ```json
 {
   "detail": {
     "code": "PROJECT_NOT_FOUND",
-    "message": "项目不存在",
+    "message": "Project not found",
     "timestamp": "2026-01-09T14:35:10Z"
   }
 }
 ```
 
-### 错误码
+### Error Codes
 
-| 错误码 | HTTP状态码 | 说明 |
-|-------|-----------|------|
-| `PROJECT_NOT_FOUND` | 404 | 项目不存在 |
-| `CITATION_NOT_FOUND` | 404 | 引用不存在 |
-| `FILE_NOT_FOUND` | 404 | 文件不存在 |
-| `INVALID_FILE_FORMAT` | 400 | 无效的文件格式 |
-| `FILE_TOO_LARGE` | 413 | 文件过大 |
-| `PIPELINE_ERROR` | 500 | 流水线运行错误 |
-| `LLM_API_ERROR` | 502 | LLM API 错误 |
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `PROJECT_NOT_FOUND` | 404 | Project not found |
+| `CITATION_NOT_FOUND` | 404 | Citation not found |
+| `FILE_NOT_FOUND` | 404 | File not found |
+| `INVALID_FILE_FORMAT` | 400 | Invalid file format |
+| `FILE_TOO_LARGE` | 413 | File too large |
+| `PIPELINE_ERROR` | 500 | Pipeline execution error |
+| `LLM_API_ERROR` | 502 | LLM API error |
 
 ---
 
-## 安全性
+## Security
 
-### CORS 配置
+### CORS Configuration
 
 ```python
 # src/api/middleware/cors.py
@@ -742,14 +742,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 前端地址
+    allow_origins=["http://localhost:3000"],  # Frontend address
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 ```
 
-### 文件上传限制
+### File Upload Restrictions
 
 ```python
 # src/api/main.py
@@ -759,41 +759,41 @@ app.add_middleware(
     allowed_hosts=["localhost", "127.0.0.1"]
 )
 
-# 文件大小限制
+# File size limit
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 ```
 
 ---
 
-## 性能优化
+## Performance Optimization
 
-### 1. 文件缓存
+### 1. File Caching
 
-使用 ETag 和 Last-Modified 头优化图片/文件响应。
+Use ETag and Last-Modified headers to optimize image/file responses.
 
-### 2. 异步处理
+### 2. Asynchronous Processing
 
-所有流水线操作均通过后台任务异步执行，避免阻塞 API 响应。
+All pipeline operations are executed asynchronously via background tasks to avoid blocking API responses.
 
-### 3. 分页
+### 3. Pagination
 
-项目列表使用 limit/offset 分页，默认 20 条/页。
+Project list uses limit/offset pagination, default 20 items per page.
 
 ---
 
-## 部署
+## Deployment
 
-### 开发环境
+### Development Environment
 
 ```bash
-# 启动 API 服务器
+# Start API server
 uv run uvicorn src.api.main:app --reload --port 8000
 ```
 
-### 生产环境
+### Production Environment
 
 ```bash
-# 使用 Gunicorn + Uvicorn workers
+# Use Gunicorn + Uvicorn workers
 gunicorn src.api.main:app \
   --workers 4 \
   --worker-class uvicorn.workers.UvicornWorker \
@@ -802,15 +802,15 @@ gunicorn src.api.main:app \
 
 ---
 
-## 依赖更新
+## Dependency Updates
 
-需要在 `pyproject.toml` 中添加：
+Add to `pyproject.toml`:
 
 ```toml
 [project.dependencies]
-# 现有依赖...
+# Existing dependencies...
 fastapi = ">=0.115.0"
 uvicorn = {extras = ["standard"], version = ">=0.32.0"}
-python-multipart = ">=0.0.20"  # 文件上传
+python-multipart = ">=0.0.20"  # File upload
 websockets = ">=14.0"
 ```
