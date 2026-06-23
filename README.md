@@ -2,6 +2,10 @@
 
 A financial document analysis and in-depth research report generation system based on LangGraph multi-agent architecture.
 
+## Showcase Video
+
+[Watch the DeepFinance QA showcase video](docs/assets/deepfinance-showcase-qa-16x9.mp4)
+
 ## Features
 
 - ✅ **PDF Document Parsing**: Convert PDF to structured Markdown + images using Docling
