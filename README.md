@@ -2,11 +2,11 @@
 
 A financial document analysis and in-depth research report generation system based on LangGraph multi-agent architecture.
 
-## Showcase Video
+## Demo Video
 
-[![DeepFinance QA showcase preview](docs/assets/deepfinance-showcase-qa-preview.gif)](docs/assets/deepfinance-showcase-qa-16x9.mp4)
+[![DeepFinance QA demo preview](docs/assets/deepfinance-showcase-qa-preview.gif)](docs/assets/deepfinance-showcase-qa-16x9.mp4)
 
-Click the preview to open the full MP4 video with audio.
+Click the preview to watch the full DeepFinance QA demo with audio.
 
 ## Features
 
